@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "674077705783",
+    "project_id": "db-manejo-de-tareas",
+    "storage_bucket": "db-manejo-de-tareas.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:674077705783:android:ce805c7bf3ffa5375661b2",
+        "android_client_info": {
+          "package_name": "com.example.task_manager"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "674077705783-k8hc7t7s45m9hmogs7lncinouunjlg9l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0Gb4NBfxqUlET900mZTgoOVHBaEUJawY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "674077705783-k8hc7t7s45m9hmogs7lncinouunjlg9l.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "674077705783-5ueqp1krbb4liqbt8bha4n7bqhhfl284.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.taskManager"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
