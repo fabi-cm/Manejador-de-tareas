@@ -1,15 +1,25 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Registro con Email y Contraseña
-  Future<User?> register(String email, String password) async {
+  // Registro con Email y Contraseña y nombre de usuario
+  Future<User?> register(String email, String password, String username) async {
     try {
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      //Guardar en firestore el nombre de usuario
+      await _firestore.collection("users").doc(userCredential.user!.uid).set({
+        "uid": userCredential.user!.uid,
+        "email": email,
+        "username": username,
+      });
+
       return userCredential.user;
     } catch (e) {
       print("Error en el registro: $e");
