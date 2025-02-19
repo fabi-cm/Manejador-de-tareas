@@ -17,17 +17,26 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        return android;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for android - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
         return macos;
       case TargetPlatform.windows:
-        return windows;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for windows - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -40,51 +49,22 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAuB3kRh33XUzyZVZqbfOcaGb8naeI5-mk',
-    appId: '1:674077705783:web:685bbb6e7a63aa935661b2',
-    messagingSenderId: '674077705783',
-    projectId: 'db-manejo-de-tareas',
-    authDomain: 'db-manejo-de-tareas.firebaseapp.com',
-    storageBucket: 'db-manejo-de-tareas.firebasestorage.app',
-    measurementId: 'G-SSZTLBSY24',
-  );
-
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyA0Gb4NBfxqUlET900mZTgoOVHBaEUJawY',
-    appId: '1:674077705783:android:ce805c7bf3ffa5375661b2',
-    messagingSenderId: '674077705783',
-    projectId: 'db-manejo-de-tareas',
-    storageBucket: 'db-manejo-de-tareas.firebasestorage.app',
-  );
-
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCb3uvI2Fn1Ibj611qm_QdlW6fTMDJhXMQ',
-    appId: '1:674077705783:ios:f665576adc56b1c75661b2',
-    messagingSenderId: '674077705783',
-    projectId: 'db-manejo-de-tareas',
-    storageBucket: 'db-manejo-de-tareas.firebasestorage.app',
-    iosClientId: '674077705783-5ueqp1krbb4liqbt8bha4n7bqhhfl284.apps.googleusercontent.com',
+    apiKey: 'AIzaSyBQ5jkW3tuvLrYFwFrl9GABxQgikmEr-CA',
+    appId: '1:572208784994:ios:f2dca3a9de4009bf08533b',
+    messagingSenderId: '572208784994',
+    projectId: 'prueba2-aa4f5',
+    storageBucket: 'prueba2-aa4f5.firebasestorage.app',
     iosBundleId: 'com.example.taskManager',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCb3uvI2Fn1Ibj611qm_QdlW6fTMDJhXMQ',
-    appId: '1:674077705783:ios:f665576adc56b1c75661b2',
-    messagingSenderId: '674077705783',
-    projectId: 'db-manejo-de-tareas',
-    storageBucket: 'db-manejo-de-tareas.firebasestorage.app',
-    iosClientId: '674077705783-5ueqp1krbb4liqbt8bha4n7bqhhfl284.apps.googleusercontent.com',
+    apiKey: 'AIzaSyBQ5jkW3tuvLrYFwFrl9GABxQgikmEr-CA',
+    appId: '1:572208784994:ios:f2dca3a9de4009bf08533b',
+    messagingSenderId: '572208784994',
+    projectId: 'prueba2-aa4f5',
+    storageBucket: 'prueba2-aa4f5.firebasestorage.app',
     iosBundleId: 'com.example.taskManager',
   );
 
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyAuB3kRh33XUzyZVZqbfOcaGb8naeI5-mk',
-    appId: '1:674077705783:web:cb5b19b81e7c02395661b2',
-    messagingSenderId: '674077705783',
-    projectId: 'db-manejo-de-tareas',
-    authDomain: 'db-manejo-de-tareas.firebaseapp.com',
-    storageBucket: 'db-manejo-de-tareas.firebasestorage.app',
-    measurementId: 'G-RX6DVPZCJF',
-  );
 }
