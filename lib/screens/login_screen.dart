@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:task_manager/screens/register_screen.dart';
 import '../auth_service.dart';
 import 'home_screen.dart';
-import 'package:google_fonts/google_fonts.dart';
+//import 'package:google_fonts/google_fonts.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -63,14 +63,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   Text(
                     "DIESELSOF",
-                    style: GoogleFonts.bebasNeue(
-                      textStyle: TextStyle(
-                        color: Colors.blue,
-                        letterSpacing: .5,
-                        fontSize: 60,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
+                     style: TextStyle(
+                       fontSize: 50,
+                       fontWeight: FontWeight.bold,
+                       fontStyle: FontStyle.italic,
+                       color: Colors.orange,
+                     ),
                     textAlign: TextAlign.center,
                   ),
                   Text(
@@ -78,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.orange,
+                      color: Colors.indigo,
                     ),
                     textAlign: TextAlign.center,
                   ),

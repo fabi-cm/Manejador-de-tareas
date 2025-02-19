@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+//import 'package:google_fonts/google_fonts.dart';
 import '../auth_service.dart';
 import 'login_screen.dart';
 
@@ -65,13 +65,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 alignment: Alignment.center,
                 child: Text(
                   "Registro de Usuario",
-                  style: GoogleFonts.bebasNeue(
-                    textStyle: TextStyle(
-                      color: Colors.orange,
-                      letterSpacing: .5,
-                      fontSize: 60,
-                      fontStyle: FontStyle.italic,
-                    ),
+                  style: TextStyle(
+                    fontSize: 50,
+                    fontWeight: FontWeight.bold,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.orange,
                   ),
                   textAlign: TextAlign.center,
                 ),
