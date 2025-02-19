@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:task_manager/screens/register_screen.dart';
+import 'register_screen.dart';
 import '../auth_service.dart';
 import 'home_screen.dart';
+import '../tasks/create_task_page.dart';
+
 //import 'package:google_fonts/google_fonts.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -23,7 +25,12 @@ class _LoginScreenState extends State<LoginScreen> {
     var user = await authService.login(email, password);
     if (user != null) {
       print("Login exitoso: ${user.email}");
-      Navigator.push(context, MaterialPageRoute(builder: (_) => HomeScreen()));
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+             builder: (_) => HomeScreen(id: user.uid),
+            //builder: (_) => CreateTaskPage(id: user.uid),
+          ));
     } else {
       print("Error al iniciar sesión");
     }
@@ -32,20 +39,22 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView( // Envolviendo todo en un Scroll
+      body: SingleChildScrollView(
+        // Envolviendo todo en un Scroll
         child: Container(
           clipBehavior: Clip.antiAlias,
 
           width: double.infinity,
-          height: MediaQuery.of(context).size.height, // Usamos MediaQuery para evitar problemas de scroll
+          height: MediaQuery.of(context)
+              .size
+              .height, // Usamos MediaQuery para evitar problemas de scroll
           decoration: BoxDecoration(
-
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.white,  // Mitad superior blanca
-                Colors.blue,   // Mitad inferior azul
+                Colors.white, // Mitad superior blanca
+                Colors.blue, // Mitad inferior azul
               ],
               stops: [0.7, 0.3],
             ),
@@ -62,13 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 180,
                   ),
                   Text(
-                    "DIESELSOF",
-                     style: TextStyle(
-                       fontSize: 50,
-                       fontWeight: FontWeight.bold,
-                       fontStyle: FontStyle.italic,
-                       color: Colors.orange,
-                     ),
+                    "DIESELSOFS",
                     textAlign: TextAlign.center,
                   ),
                   Text(
@@ -76,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.indigo,
+                      color: Colors.orange,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -119,22 +122,24 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: ElevatedButton.styleFrom(
                             foregroundColor: Colors.white,
                             backgroundColor: Colors.blue,
-                            minimumSize: Size(double.infinity, 50), // Ancho 100% y altura 50
+                            minimumSize: Size(
+                                double.infinity, 50), // Ancho 100% y altura 50
                           ),
                           child: Text(
                             "Iniciar Sesión",
                             style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            fontStyle: FontStyle.italic,
-                          ),
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                         ),
                         TextButton(
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => RegisterScreen()),
+                              MaterialPageRoute(
+                                  builder: (_) => RegisterScreen()),
                             );
                           },
                           child: Text("¿No tienes cuenta? Crear cuenta"),
@@ -150,5 +155,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
 }

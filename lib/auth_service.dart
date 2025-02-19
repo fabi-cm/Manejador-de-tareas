@@ -1,23 +1,31 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+enum Role { administrador, encargado, trabajador }
+
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Registro con Email y Contraseña y nombre de usuario
-  Future<User?> register(String email, String password, String username) async {
+  // Registro con Email, Contraseña, Nombre de usuario y Rol
+  Future<User?> register(String email, String password, String username,
+      [Role role = Role.trabajador]) async {
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+      await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      //Guardar en firestore el nombre de usuario
+      // Convertir el enum Role en un String para guardarlo en Firestore
+      String roleString = role.toString().split('.').last;
+
+      //Guardar en firestore el nombre de usuario y el rol
       await _firestore.collection("users").doc(userCredential.user!.uid).set({
         "uid": userCredential.user!.uid,
         "email": email,
         "username": username,
+        "role": roleString,
       });
 
       return userCredential.user;

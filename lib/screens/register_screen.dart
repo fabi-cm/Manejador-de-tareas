@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-//import 'package:google_fonts/google_fonts.dart';
 import '../auth_service.dart';
 import 'login_screen.dart';
 
@@ -13,7 +12,8 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+  TextEditingController();
   final TextEditingController usernameController = TextEditingController();
 
   final AuthService authService = AuthService();
@@ -34,7 +34,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     var user = await authService.register(email, password, username);
     if (user != null) {
       print("Registro exitoso: ${user.email}");
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginScreen()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => LoginScreen()));
     } else {
       print("Error al registrarse");
     }
@@ -47,14 +48,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Inicio de sesión",
+          "Registro de Usuario",
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         backgroundColor: Colors.white,
       ),
-      body: Container(  // Agregado Container para cambiar el color de fondo del body
-        color: Colors.blue,  // Color del body
-        child: SingleChildScrollView(  // Hacemos que el body sea desplazable
+      body: Container(
+        // Agregado Container para cambiar el color de fondo del body
+        color: Colors.blue, // Color del body
+        child: SingleChildScrollView(
+          // Hacemos que el body sea desplazable
           child: Column(
             children: [
               // Contenedor superior con el título
@@ -65,92 +68,94 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 alignment: Alignment.center,
                 child: Text(
                   "Registro de Usuario",
-                  style: TextStyle(
-                    fontSize: 50,
-                    fontWeight: FontWeight.bold,
-                    fontStyle: FontStyle.italic,
-                    color: Colors.orange,
-                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
 
               // Contenedor inferior con el formulario
               Container(
-                width: MediaQuery.of(context).size.width * 0.9, // Define el ancho
+                width:
+                MediaQuery.of(context).size.width * 0.9, // Define el ancho
                 height: screenHeight * 0.69,
                 color: Colors.blue, // Color de fondo
                 child: Padding(
                   padding: EdgeInsets.all(16.0),
                   child: Column(
                     children: [
+                      // Campo para Nombre de Usuario
                       TextField(
                         controller: usernameController,
                         decoration: InputDecoration(
-                            labelText: "Nombre Usuario",
-                            labelStyle: TextStyle(color: Colors.black),
-                            prefixIcon: Icon(Icons.lock_outline),
-                            fillColor: Colors.white,
-                            filled: true,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            )
-                        ),                      ),
+                          labelText: "Nombre Usuario",
+                          labelStyle: TextStyle(color: Colors.black),
+                          prefixIcon: Icon(Icons.person),
+                          fillColor: Colors.white,
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      ),
                       SizedBox(height: 30),
 
+                      // Campo para Correo Electrónico
                       TextField(
                         controller: emailController,
                         decoration: InputDecoration(
-                            labelText: "Correo Electronico",
-                            labelStyle: TextStyle(color: Colors.black),
-                            prefixIcon: Icon(Icons.lock_outline),
-                            fillColor: Colors.white,
-                            filled: true,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-
-                            )
-                        ),                      ),
+                          labelText: "Correo Electronico",
+                          labelStyle: TextStyle(color: Colors.black),
+                          prefixIcon: Icon(Icons.email),
+                          fillColor: Colors.white,
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      ),
                       SizedBox(height: 30),
 
+                      // Campo para Contraseña
                       TextField(
                         controller: passwordController,
                         decoration: InputDecoration(
-                            labelText: "Contraseña",
-                            labelStyle: TextStyle(color: Colors.black),
-                            prefixIcon: Icon(Icons.lock_outline),
-                            fillColor: Colors.white,
-                            filled: true,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            )
-                        ),                        obscureText: true,
+                          labelText: "Contraseña",
+                          labelStyle: TextStyle(color: Colors.black),
+                          prefixIcon: Icon(Icons.lock_outline),
+                          fillColor: Colors.white,
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        obscureText: true,
                       ),
                       SizedBox(height: 30),
 
+                      // Campo para Repetir Contraseña
                       TextField(
                         controller: confirmPasswordController,
                         decoration: InputDecoration(
-                            labelText: "Repetir Contraseña",
-                            labelStyle: TextStyle(color: Colors.black),
-                            prefixIcon: Icon(Icons.lock_outline),
-                            fillColor: Colors.white,
-                            filled: true,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            )
+                          labelText: "Repetir Contraseña",
+                          labelStyle: TextStyle(color: Colors.black),
+                          prefixIcon: Icon(Icons.lock_outline),
+                          fillColor: Colors.white,
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                         ),
-                        obscureText: false,
+                        obscureText: true,
                       ),
                       SizedBox(height: 50),
 
+                      // Botón de Registro
                       ElevatedButton(
                         onPressed: register,
                         style: ElevatedButton.styleFrom(
                           foregroundColor: Colors.white,
                           backgroundColor: Colors.orange,
-                          minimumSize: Size(double.infinity, 50), // Ancho 100% y altura 50
-
+                          minimumSize: Size(
+                              double.infinity, 50), // Ancho 100% y altura 50
                         ),
                         child: Text(
                           "Crear Usuario",
