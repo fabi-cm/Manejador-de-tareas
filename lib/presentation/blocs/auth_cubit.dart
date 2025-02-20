@@ -1,6 +1,10 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../../screens/login_screen.dart';
 
 // Definimos los estados
 abstract class AuthState {}
@@ -12,7 +16,8 @@ class AuthLoading extends AuthState {}
 class Authenticated extends AuthState {
   final User user;
   final String role;
-  Authenticated(this.user, this.role);
+  final String username;
+  Authenticated(this.user, this.role, this.username);
 }
 
 class Unauthenticated extends AuthState {}
@@ -26,6 +31,7 @@ class AuthError extends AuthState {
 class AuthCubit extends Cubit<AuthState> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  //final FirebaseAuth _auth;
 
   AuthCubit() : super(AuthInitial());
 
@@ -45,7 +51,8 @@ class AuthCubit extends Cubit<AuthState> {
       DocumentSnapshot doc = await _firestore.collection('users').doc(user.uid).get();
       if (doc.exists) {
         String role = doc['role'] ?? 'trabajador';
-        emit(Authenticated(user, role));
+        String username = doc['username'] ?? 'Otro';
+        emit(Authenticated(user, role, username));
       } else {
         emit(Unauthenticated());
       }
@@ -53,6 +60,7 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthError("Error obteniendo rol: $e"));
     }
   }
+
 
   // Iniciar sesión
   Future<void> login(String email, String password) async {
@@ -68,9 +76,25 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+
+
   // Cerrar sesión
-  Future<void> logout() async {
-    await _auth.signOut();
-    emit(Unauthenticated());
+  Future<void> logout(BuildContext context) async {
+    try {
+      await _auth.signOut();
+      emit(Unauthenticated()); // Emite el estado "No autenticado"
+
+      // Redirigir a LoginScreen después de cerrar sesión
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => LoginScreen()),
+      );
+    } catch (e) {
+      emit(AuthError("Error al cerrar sesión: $e")); // Emite un estado de error
+
+      // Mostrar un mensaje de error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error al cerrar sesión: $e")),
+      );
+    }
   }
 }

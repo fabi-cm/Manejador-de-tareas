@@ -24,7 +24,7 @@ class ManagerScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => context.read<AuthCubit>().logout(),
+            onPressed: () => context.read<AuthCubit>().logout(context),
           ),
         ],
       ),
