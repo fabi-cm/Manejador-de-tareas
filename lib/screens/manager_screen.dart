@@ -14,6 +14,12 @@ class _ManagerScreenState extends State<ManagerScreen> {
   int _selectedIndex = 0; // Índice de la barra de navegación
   String? currentUserId; // ID del usuario autenticado
 
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  String? assignedUserId;
+  String? assignedUserName;
+  bool isButtonEnabled = false;
+
   @override
   void initState() {
     super.initState();
@@ -29,9 +35,33 @@ class _ManagerScreenState extends State<ManagerScreen> {
     }
   }
 
+  void _checkForm() {
+    setState(() {
+      isButtonEnabled = _titleController.text.isNotEmpty &&
+          _descriptionController.text.isNotEmpty &&
+          assignedUserId != null;
+    });
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Panel de Encargado"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => context.read<AuthCubit>().logout(context),
+          ),
+        ],
+      ),
       body: _selectedIndex == 0 ? _buildCreateTaskScreen() : _buildWorkerListScreen(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
@@ -50,19 +80,6 @@ class _ManagerScreenState extends State<ManagerScreen> {
 
   /// **Pantalla para Crear Tarea**
   Widget _buildCreateTaskScreen() {
-    final TextEditingController _titleController = TextEditingController();
-    final TextEditingController _descriptionController = TextEditingController();
-    String? assignedUserId;
-    bool isButtonEnabled = false;
-
-    void _checkForm() {
-      setState(() {
-        isButtonEnabled = _titleController.text.isNotEmpty &&
-            _descriptionController.text.isNotEmpty &&
-            assignedUserId != null;
-      });
-    }
-
     return Padding(
       padding: EdgeInsets.all(16.0),
       child: Column(
@@ -83,15 +100,16 @@ class _ManagerScreenState extends State<ManagerScreen> {
               Text("Asignar a: "),
               ElevatedButton(
                 onPressed: () async {
-                  final selectedUserId = await _showUserSelectionDialog(context);
-                  if (selectedUserId != null) {
+                  final selectedUser = await _showUserSelectionDialog(context);
+                  if (selectedUser != null) {
                     setState(() {
-                      assignedUserId = selectedUserId;
+                      assignedUserId = selectedUser['uid'];
+                      assignedUserName = selectedUser['username'];
                       _checkForm();
                     });
                   }
                 },
-                child: Text(assignedUserId ?? "Seleccionar"),
+                child: Text(assignedUserName ?? "Seleccionar"),
               ),
             ],
           ),
@@ -105,7 +123,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
                   title: _titleController.text,
                   description: _descriptionController.text,
                   assignedTo: assignedUserId!,
-                  status: "Pendiente",
+                  status: "pendiente",
                   priority: 1,
                   createdBy: currentUserId ?? "ID_DESCONOCIDO",
                   timestamp: DateTime.now(),
@@ -117,6 +135,14 @@ class _ManagerScreenState extends State<ManagerScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text("Tarea creada con éxito")),
                   );
+                  // Limpiar los campos después de la creación
+                  setState(() {
+                    _titleController.clear();
+                    _descriptionController.clear();
+                    assignedUserId = null;
+                    assignedUserName = null;
+                    isButtonEnabled = false;
+                  });
                 }
               } catch (e) {
                 print("Error al crear la tarea: $e");
@@ -158,7 +184,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
   }
 
   /// **Función para seleccionar un trabajador**
-  Future<String?> _showUserSelectionDialog(BuildContext context) async {
+  Future<Map<String, String>?> _showUserSelectionDialog(BuildContext context) async {
     List<Map<String, String>> workersList = [];
 
     try {
@@ -178,7 +204,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
       return null;
     }
 
-    return showDialog<String>(
+    return showDialog<Map<String, String>?>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -190,7 +216,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
             children: workersList.map((worker) {
               return ListTile(
                 title: Text(worker['username']!),
-                onTap: () => Navigator.pop(context, worker['uid']),
+                onTap: () => Navigator.pop(context, worker),
               );
             }).toList(),
           ),
