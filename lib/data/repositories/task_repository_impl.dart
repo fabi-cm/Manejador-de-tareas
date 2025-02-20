@@ -10,10 +10,10 @@ class TaskRepositoryImpl implements TaskRepository {
     await _firestore.collection('tasks').doc(task.id).set({
       'title': task.title,
       'description': task.description,
-      'assigned_to': task.assignedTo,
+      'assignedTo': task.assignedTo,
       'status': task.status,
       'priority': task.priority,
-      'created_by': task.createdBy,
+      'createdBy': task.createdBy,
       'timestamp': task.timestamp.millisecondsSinceEpoch,
     });
   }
@@ -37,7 +37,7 @@ class TaskRepositoryImpl implements TaskRepository {
   Future<List<TaskEntity>> getTasksAssignedBy(String userId) async {
     final querySnapshot = await _firestore
         .collection('tasks')
-        .where('created_by', isEqualTo: userId)
+        .where('createdBy', isEqualTo: userId)
         .get();
 
     return querySnapshot.docs.map((doc) {
@@ -46,10 +46,10 @@ class TaskRepositoryImpl implements TaskRepository {
         id: doc.id,
         title: data['title'],
         description: data['description'],
-        assignedTo: data['assigned_to'],
+        assignedTo: data['assignedTo'],
         status: data['status'],
         priority: data['priority'],
-        createdBy: data['created_by'],
+        createdBy: data['createdBy'],
         timestamp: DateTime.fromMillisecondsSinceEpoch(data['timestamp']),
       );
     }).toList();

@@ -5,14 +5,28 @@ import '../../domain/usecases/task/delete_task.dart';
 import '../../domain/usecases/task/get_tasks_assigned_by.dart';
 import '../../domain/usecases/task/update_task.dart';
 
+/// Estado del TaskCubit
 class TaskState {
   final List<TaskEntity> tasks;
   final bool isLoading;
   final String? error;
 
   TaskState({this.tasks = const [], this.isLoading = false, this.error});
+
+  TaskState copyWith({
+    List<TaskEntity>? tasks,
+    bool? isLoading,
+    String? error,
+  }) {
+    return TaskState(
+      tasks: tasks ?? this.tasks,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+    );
+  }
 }
 
+/// TaskCubit que maneja las tareas
 class TaskCubit extends Cubit<TaskState> {
   final AddTask addTask;
   final UpdateTask updateTask;
@@ -26,40 +40,46 @@ class TaskCubit extends Cubit<TaskState> {
     required this.getTasksAssignedBy,
   }) : super(TaskState());
 
+  /// Cargar tareas asignadas por un usuario
   Future<void> loadTasks(String userId) async {
-    emit(TaskState(isLoading: true));
+    emit(state.copyWith(isLoading: true));
     try {
       final tasks = await getTasksAssignedBy(userId);
-      emit(TaskState(tasks: tasks));
+      emit(state.copyWith(tasks: tasks, isLoading: false));
     } catch (e) {
-      emit(TaskState(error: "Error al cargar las tareas"));
+      emit(state.copyWith(isLoading: false, error: "Error al cargar las tareas"));
     }
   }
 
+  /// Crear una nueva tarea
   Future<void> createTask(TaskEntity task) async {
     try {
       await addTask(task);
-      loadTasks(task.assignedTo); // Recargar las tareas
+      emit(state.copyWith(tasks: [...state.tasks, task])); // Agregar la tarea localmente
     } catch (e) {
-      emit(TaskState(error: "Error al agregar la tarea"));
+      emit(state.copyWith(error: "Error al agregar la tarea"));
     }
   }
 
+  /// Modificar una tarea existente
   Future<void> modifyTask(TaskEntity task) async {
     try {
       await updateTask(task);
-      loadTasks(task.assignedTo);
+      final updatedTasks = state.tasks.map((t) => t.id == task.id ? task : t).toList();
+      emit(state.copyWith(tasks: updatedTasks));
     } catch (e) {
-      emit(TaskState(error: "Error al actualizar la tarea"));
+      emit(state.copyWith(error: "Error al actualizar la tarea"));
     }
   }
 
-  Future<void> removeTask(String taskId, String userId) async {
+  /// Eliminar una tarea
+  Future<void> removeTask(String taskId) async {
     try {
       await deleteTask(taskId);
-      loadTasks(userId);
+      final updatedTasks = state.tasks.where((task) => task.id != taskId).toList();
+      emit(state.copyWith(tasks: updatedTasks));
     } catch (e) {
-      emit(TaskState(error: "Error al eliminar la tarea"));
+      emit(state.copyWith(error: "Error al eliminar la tarea"));
     }
   }
 }

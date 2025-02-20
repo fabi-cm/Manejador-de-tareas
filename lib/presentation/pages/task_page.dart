@@ -27,7 +27,7 @@ class TaskPage extends StatelessWidget {
                 subtitle: Text("Estado: ${task.status}"),
                 trailing: IconButton(
                   icon: Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => taskCubit.removeTask(task.id, userId),
+                  onPressed: () => taskCubit.removeTask(task.id),
                 ),
               );
             },
