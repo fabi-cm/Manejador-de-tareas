@@ -20,7 +20,7 @@ class WorkerScreen extends StatelessWidget {
               const Text("No tienes permisos para acceder a esta página."),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () => context.read<AuthCubit>().logout(),
+                onPressed: () => context.read<AuthCubit>().logout(context),
                 child: const Text("Cerrar sesión"),
               ),
             ],
@@ -35,7 +35,7 @@ class WorkerScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => context.read<AuthCubit>().logout(),
+            onPressed: () => context.read<AuthCubit>().logout(context),
           )
         ],
       ),
@@ -43,7 +43,7 @@ class WorkerScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Bienvenido, ${authState.user.displayName ?? 'Usuario'}"),
+            Text("Bienvenido, ${authState.username ?? 'Usuario'}"),
             Text("Tu rol es: ${authState.role}"),
           ],
         ),

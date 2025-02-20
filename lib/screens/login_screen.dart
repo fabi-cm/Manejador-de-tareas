@@ -60,7 +60,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Image.asset('assets/logo.png', height: 180, width: 180),
-                    const Text("DIESELSOFS", textAlign: TextAlign.center),
+                    const Text(
+                        "DIESELSOFT",
+                        style: TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        textAlign: TextAlign.center),
                     const Text(
                       "MANEJO DE TAREAS",
                       style: TextStyle(

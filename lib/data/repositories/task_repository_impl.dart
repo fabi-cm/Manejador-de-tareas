@@ -54,4 +54,28 @@ class TaskRepositoryImpl implements TaskRepository {
       );
     }).toList();
   }
+
+  @override
+  Stream<List<TaskEntity>> fetchWorkerTasks(String workerId) {
+    return _firestore
+        .collection('tasks')
+        .where('assigned_to', isEqualTo: workerId) // Filtrar tareas por trabajador asignado
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return TaskEntity(
+          id: doc.id,
+          title: data['title'],
+          description: data['description'],
+          assignedTo: data['assigned_to'],
+          status: data['status'],
+          priority: data['priority'],
+          createdBy: data['created_by'],
+          timestamp: DateTime.fromMillisecondsSinceEpoch(data['timestamp']),
+        );
+      }).toList();
+    });
+  }
+
 }
