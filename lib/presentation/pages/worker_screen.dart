@@ -107,7 +107,15 @@ class WorkerScreen extends StatelessWidget {
                 elevation: 3,
                 child: ListTile(
                   leading: const Icon(Icons.assignment, color: Colors.blue),
-                  title: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  title: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      fontStyle: FontStyle.italic,
+                      decoration: status == "Completado" ? TextDecoration.lineThrough : TextDecoration.none, // 🔥 Tacha solo si está completado
+                    ),
+                  ),
                   subtitle: Text(description),
                   trailing: ElevatedButton(
                     onPressed: () => _updateTaskStatus(taskId, status),
@@ -120,6 +128,7 @@ class WorkerScreen extends StatelessWidget {
                   contentPadding: const EdgeInsets.all(16),
                 ),
               );
+
             },
           );
         },
