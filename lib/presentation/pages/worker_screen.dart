@@ -1,45 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../data/repositories/task_repository_impl.dart';
+import '../../domain/repositories/task_repository.dart';
 import '../blocs/auth_cubit.dart';
+import '../blocs/worker_cubit.dart';
+import '../widgets/task_item.dart';
 
 class WorkerScreen extends StatelessWidget {
   const WorkerScreen({super.key});
-
-  // Función para cambiar el estado de la tarea
-  Future<void> _updateTaskStatus(String taskId, String currentStatus) async {
-    String newStatus;
-    switch (currentStatus) {
-      case 'Pendiente':
-        newStatus = 'En progreso';
-        break;
-      case 'En progreso':
-        newStatus = 'Completado';
-        break;
-      default:
-        newStatus = 'Pendiente';
-    }
-
-    try {
-      await FirebaseFirestore.instance.collection('tasks').doc(taskId).update({'status': newStatus});
-    } catch (e) {
-      print('Error al actualizar el estado: $e');
-    }
-  }
-
-  // Obtener el color basado en el estado
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Pendiente':
-        return Colors.red;
-      case 'En progreso':
-        return Colors.blue;
-      case 'Completado':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,71 +35,50 @@ class WorkerScreen extends StatelessWidget {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Mis Tareas - ${authState.username ?? 'Usuario'}"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => context.read<AuthCubit>().logout(context),
-          ),
-        ],
+    return BlocProvider(
+      create: (context) => WorkerCubit(
+        taskRepository: TaskRepositoryImpl(),
+        userId: authState.user.uid,
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('tasks')
-            .where('assignedTo', isEqualTo: authState.user.uid) // Filtra por trabajador autenticado
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("No tienes tareas asignadas"));
-          }
-
-          var tasks = snapshot.data!.docs;
-
-          return ListView.builder(
-            itemCount: tasks.length,
-            itemBuilder: (context, index) {
-              var task = tasks[index];
-              String taskId = task.id;
-              String title = task['title'];
-              String description = task['description'];
-              String status = task['status']; // Estado actual de la tarea
-
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                elevation: 3,
-                child: ListTile(
-                  leading: const Icon(Icons.assignment, color: Colors.blue),
-                  title: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      fontStyle: FontStyle.italic,
-                      decoration: status == "Completado" ? TextDecoration.lineThrough : TextDecoration.none, // 🔥 Tacha solo si está completado
-                    ),
-                  ),
-                  subtitle: Text(description),
-                  trailing: ElevatedButton(
-                    onPressed: () => _updateTaskStatus(taskId, status),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _getStatusColor(status),
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Text(status),
-                  ),
-                  contentPadding: const EdgeInsets.all(16),
-                ),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("Mis Tareas - ${authState.username ?? 'Usuario'}"),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () => context.read<AuthCubit>().logout(context),
+            ),
+          ],
+        ),
+        body: BlocBuilder<WorkerCubit, WorkerState>(
+          builder: (context, state) {
+            if (state is WorkerLoading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is WorkerLoaded) {
+              final tasks = state.tasks;
+              return ListView.builder(
+                itemCount: tasks.length,
+                itemBuilder: (context, index) {
+                  final task = tasks[index];
+                  return TaskItem(
+                    taskId: task['id'],
+                    title: task['title'],
+                    description: task['description'],
+                    status: task['status'],
+                    priority: task['priority'].toString(),
+                    onUpdateStatus: (taskId, newStatus) {
+                      context.read<WorkerCubit>().updateTaskStatus(taskId, newStatus);
+                    },
+                  );
+                },
               );
-
-            },
-          );
-        },
+            } else if (state is WorkerError) {
+              return Center(child: Text(state.message));
+            } else {
+              return const Center(child: Text("Estado desconocido"));
+            }
+          },
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class UserRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -22,4 +23,9 @@ class UserRepository {
       throw Exception("Error al actualizar el rol del usuario: $e");
     }
   }
+
+  Future<void> deleteUser(String userId) async {
+    await _firestore.collection("users").doc(userId).delete();
+  }
+
 }

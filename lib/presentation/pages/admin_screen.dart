@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/repositories/user_repository.dart';
 import '../blocs/admin_cubit.dart';
 import '../blocs/auth_cubit.dart';
+import '../widgets/register_dialog.dart';
 import '../widgets/role_dialog.dart';
 
 class AdminScreen extends StatelessWidget {
@@ -14,11 +15,11 @@ class AdminScreen extends StatelessWidget {
 
     if (authState is! Authenticated || authState.role != "administrador") {
       return Scaffold(
-        body: Center(
+        body:  Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("No tienes permisos para acceder a esta página."),
+              const Text(" . No tienes permisos para acceder a esta página."),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => context.read<AuthCubit>().logout(context),
@@ -26,7 +27,7 @@ class AdminScreen extends StatelessWidget {
               ),
             ],
           ),
-        ),
+        )
       );
     }
 
@@ -54,9 +55,18 @@ class AdminScreen extends StatelessWidget {
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center, // Centra el contenido verticalmente
             children: [
-              const Text("Usuarios Registrados", style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+              Text(
+                "Lista de",
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                "Usuarios",
+                style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, fontFamily: 'italiano', color: Colors.orange),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 10),
               Expanded(
                 child: BlocBuilder<AdminCubit, AdminState>(
@@ -71,16 +81,27 @@ class AdminScreen extends StatelessWidget {
                           return Card(
                             child: ListTile(
                               title: Text(state.users[index]['username'] ?? 'Sin nombre'),
-                              subtitle: Text(state.users[index]['email'] ?? 'Sin email'),
+                              subtitle: Row(
+                                mainAxisAlignment: MainAxisAlignment.start, // 🔥 Pegado a la izquierda
+                                children: [
+                                  _getRoleIcon(state.users[index]['role'] ?? 'Sin rol'),
+                                ],
+                              ),
                               leading: const Icon(Icons.person),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(role),
+                                  // Mostrar ícono según el rol
                                   IconButton(
                                     icon: const Icon(Icons.edit),
                                     onPressed: () {
                                       _showRoleDialog(context, state.users[index]['uid']);
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () {
+                                      _deleteUser(context, state.users[index]['uid']);
                                     },
                                   ),
                                 ],
@@ -100,6 +121,11 @@ class AdminScreen extends StatelessWidget {
             ],
           ),
         ),
+          floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            showRegisterDialog(context);    },
+      child: const Icon(Icons.add),
+    ),
       ),
     );
   }
@@ -117,4 +143,50 @@ class AdminScreen extends StatelessWidget {
       },
     );
   }
+
+  void _deleteUser(BuildContext context, String userId) {
+    final adminCubit = context.read<AdminCubit>();
+
+    // Mostrar un diálogo de confirmación antes de eliminar
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Eliminar Usuario"),
+          content: const Text("¿Estás seguro de que deseas eliminar este usuario?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Cerrar el diálogo
+              },
+              child: const Text("Cancelar"),
+            ),
+            TextButton(
+              onPressed: () {
+                adminCubit.deleteUser(userId); // Eliminar el usuario
+                Navigator.pop(context); // Cerrar el diálogo
+              },
+              child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _getRoleIcon(String role) {
+    switch (role) {
+      case 'administrador':
+        return const Icon(Icons.admin_panel_settings_outlined, color: Colors.blue);
+      case 'encargado':
+        return const Icon(Icons.groups, color: Colors.green);
+      case 'trabajador':
+        return const Icon(Icons.build_sharp, color: Colors.orange);
+      default:
+        return const Icon(Icons.person, color: Colors.grey); // Ícono por defecto
+    }
+  }
+
 }
+
+

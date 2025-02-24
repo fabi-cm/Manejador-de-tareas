@@ -78,4 +78,22 @@ class TaskRepositoryImpl implements TaskRepository {
     });
   }
 
+  // Obtener tareas asignadas a un trabajador en tiempo real
+  Stream<QuerySnapshot> getTasksAssignedTo(String userId) {
+    return _firestore
+        .collection('tasks')
+        .where('assignedTo', isEqualTo: userId)
+        .orderBy('priority') // Ordenar por estado
+        .snapshots();
+  }
+
+  // Actualizar el estado de una tarea
+  Future<void> updateTaskStatus(String taskId, String newStatus) async {
+    try {
+      await _firestore.collection('tasks').doc(taskId).update({'status': newStatus});
+    } catch (e) {
+      throw Exception("Error al actualizar el estado de la tarea: $e");
+    }
+  }
+
 }
