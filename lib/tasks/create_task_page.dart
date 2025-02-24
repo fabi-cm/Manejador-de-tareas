@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class CreateTaskPage extends StatefulWidget {
   final String id; // El uid del encargado (recibido desde la navegación)
 
-  CreateTaskPage({super.key, required this.id});
+  const CreateTaskPage({super.key, required this.id});
 
   @override
   _CreateTaskPageState createState() => _CreateTaskPageState();

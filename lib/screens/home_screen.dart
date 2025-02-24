@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class HomeScreen extends StatefulWidget {
   final String id; // El uid recibido desde la navegación
 
-  HomeScreen({super.key, required this.id});
+  const HomeScreen({super.key, required this.id});
 
   @override
   _HomeScreenState createState() => _HomeScreenState();

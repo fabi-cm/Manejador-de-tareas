@@ -5,7 +5,7 @@ import '../blocs/task_cubit.dart';
 class TaskPage extends StatelessWidget {
   final String userId; // El Encargado que asigna las tareas
 
-  TaskPage({required this.userId});
+  const TaskPage({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {

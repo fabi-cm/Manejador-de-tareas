@@ -3,9 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../presentation/blocs/auth_cubit.dart';
 import '../presentation/pages/home_page.dart';
 import 'register_screen.dart';
-import '../auth_service.dart';
 // import 'home_screen.dart';
-import '../tasks/create_task_page.dart';
 
 //import 'package:google_fonts/google_fonts.dart';
 

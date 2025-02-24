@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class WorkerTaskScreen extends StatefulWidget {
   final String uid; // El uid del trabajador
 
-  WorkerTaskScreen({super.key, required this.uid});
+  const WorkerTaskScreen({super.key, required this.uid});
 
   @override
   _WorkerTaskScreenState createState() => _WorkerTaskScreenState();

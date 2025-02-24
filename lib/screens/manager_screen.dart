@@ -6,6 +6,8 @@ import 'package:task_manager/presentation/blocs/auth_cubit.dart';
 import '../domain/entities/task_entity.dart';
 
 class ManagerScreen extends StatefulWidget {
+  const ManagerScreen({super.key});
+
   @override
   _ManagerScreenState createState() => _ManagerScreenState();
 }
@@ -170,14 +172,134 @@ class _ManagerScreenState extends State<ManagerScreen> {
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(child: Text("No hay trabajadores disponibles"));
         }
-
         return ListView(
           children: snapshot.data!.docs.map((doc) {
-            return ListTile(
+            String workerId = doc.id;
+            return ExpansionTile(
               leading: Icon(Icons.person),
               title: Text(doc['username'] ?? 'Sin nombre'),
+              children: [
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('tasks')
+                      .where('assignedTo', isEqualTo: workerId)
+                      .snapshots(),
+                  builder: (context, taskSnapshot) {
+                    if (!taskSnapshot.hasData || taskSnapshot.data!.docs.isEmpty) {
+                      return ListTile(title: Text("No tiene tareas asignadas"));
+                    }
+                    return Column(
+                      children: taskSnapshot.data!.docs.map((taskDoc) {
+                        TaskEntity task = TaskEntity(
+                          id: taskDoc.id,
+                          title: taskDoc['title'],
+                          description: taskDoc['description'],
+                          assignedTo: taskDoc['assignedTo'],
+                          status: taskDoc['status'],
+                          priority: taskDoc['priority'],
+                          createdBy: taskDoc['createdBy'],
+                          timestamp: taskDoc['timestamp'] is Timestamp
+                              ? (taskDoc['timestamp'] as Timestamp).toDate()
+                              : DateTime.fromMillisecondsSinceEpoch(taskDoc['timestamp']),
+                        );
+
+                        return ListTile(
+                          title: Text(task.title),
+                          subtitle: Text(task.description),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit, color: Colors.blue),
+                                onPressed: () => _editTask(context, task),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => _confirmDeleteTask(context, task.id),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+              ],
             );
           }).toList(),
+        );
+      },
+    );
+  }
+
+
+  /// Función para editar una tarea
+  void _editTask(BuildContext context, TaskEntity task) {
+    TextEditingController titleController = TextEditingController(text: task.title);
+    TextEditingController descriptionController = TextEditingController(text: task.description);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Editar Tarea"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: InputDecoration(labelText: "Título"),
+              ),
+              TextField(
+                controller: descriptionController,
+                decoration: InputDecoration(labelText: "Descripción"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancelar"),
+            ),
+            TextButton(
+              onPressed: () {
+                TaskEntity updatedTask = task.copyWith(
+                  title: titleController.text,
+                  description: descriptionController.text,
+                );
+
+                context.read<TaskCubit>().modifyTask(updatedTask);
+                Navigator.pop(context);
+              },
+              child: Text("Guardar"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Función para confirmar la eliminación de una tarea
+  void _confirmDeleteTask(BuildContext context, String taskId) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Eliminar Tarea"),
+          content: Text("¿Estás seguro de que deseas eliminar esta tarea?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancelar"),
+            ),
+            TextButton(
+              onPressed: () {
+                context.read<TaskCubit>().removeTask(taskId);
+                Navigator.pop(context);
+              },
+              child: Text("Eliminar", style: TextStyle(color: Colors.red)),
+            ),
+          ],
         );
       },
     );
@@ -186,24 +308,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
   /// **Función para seleccionar un trabajador**
   Future<Map<String, String>?> _showUserSelectionDialog(BuildContext context) async {
     List<Map<String, String>> workersList = [];
-
-    try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where('role', isEqualTo: 'trabajador')
-          .get();
-
-      workersList = snapshot.docs
-          .map((doc) => {
-        'uid': doc.id, // ID del documento en Firebase
-        'username': doc['username'] as String,
-      })
-          .toList();
-    } catch (e) {
-      print("Error al obtener la lista de trabajadores: $e");
-      return null;
-    }
-
+    final snapshot = await FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'trabajador').get();
+    workersList = snapshot.docs.map((doc) => {'uid': doc.id, 'username': doc['username'] as String}).toList();
     return showDialog<Map<String, String>?>(
       context: context,
       builder: (context) {
@@ -211,15 +317,9 @@ class _ManagerScreenState extends State<ManagerScreen> {
           title: Text("Seleccionar Trabajador"),
           content: workersList.isEmpty
               ? Text("No hay trabajadores disponibles")
-              : Column(
-            mainAxisSize: MainAxisSize.min,
-            children: workersList.map((worker) {
-              return ListTile(
-                title: Text(worker['username']!),
-                onTap: () => Navigator.pop(context, worker),
-              );
-            }).toList(),
-          ),
+              : Column(mainAxisSize: MainAxisSize.min, children: workersList.map((worker) {
+            return ListTile(title: Text(worker['username']!), onTap: () => Navigator.pop(context, worker));
+          }).toList()),
         );
       },
     );
