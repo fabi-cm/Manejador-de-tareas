@@ -26,7 +26,7 @@ class TaskItem extends StatelessWidget {
       shadowColor: _getStatusColor(status),
       child: ListTile(
         leading: Column(
-          mainAxisSize: MainAxisSize.min, // 🔥 Evita que ocupe todo el espacio vertical
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.assignment, color: _getStatusColor(status)), // 📌 Ícono de la tarea
             const SizedBox(height: 4), // 🔥 Espacio entre ícono y prioridad
