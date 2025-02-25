@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/presentation/blocs/auth_cubit.dart';
 import 'package:task_manager/presentation/blocs/task_cubit.dart';
 import 'package:task_manager/presentation/pages/admin_screen.dart';
+import 'package:task_manager/screens/login_screen.dart';
 
 import 'data/repositories/task_repository_impl.dart';
 import 'domain/usecases/task/add_task.dart';
@@ -44,7 +45,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey, // ✅ Pasar `navigatorKey` a MaterialApp
-      home: AdminScreen(), // O HomeScreen según tu flujo
+      home: LoginScreen(), // O HomeScreen según tu flujo
     );
   }
 }

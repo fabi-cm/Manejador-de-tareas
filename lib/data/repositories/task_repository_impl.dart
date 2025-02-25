@@ -59,7 +59,7 @@ class TaskRepositoryImpl implements TaskRepository {
   Stream<List<TaskEntity>> fetchWorkerTasks(String workerId) {
     return _firestore
         .collection('tasks')
-        .where('assigned_to', isEqualTo: workerId) // Filtrar tareas por trabajador asignado
+        .where('assignedTo', isEqualTo: workerId) // Filtrar tareas por trabajador asignado
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
@@ -68,10 +68,10 @@ class TaskRepositoryImpl implements TaskRepository {
           id: doc.id,
           title: data['title'],
           description: data['description'],
-          assignedTo: data['assigned_to'],
+          assignedTo: data['assignedTo'],
           status: data['status'],
           priority: data['priority'],
-          createdBy: data['created_by'],
+          createdBy: data['createdBy'],
           timestamp: DateTime.fromMillisecondsSinceEpoch(data['timestamp']),
         );
       }).toList();

@@ -195,10 +195,13 @@ class _ManagerScreenState extends State<ManagerScreen> {
                 Color statusColor = Colors.green;
                 if (tasks.any((task) => task['status'] == "en progreso")) {
                   workerStatus = "Trabajando";
-                  statusColor = Colors.yellow;
-                } else if (tasks.isEmpty) {
-                  workerStatus = "Ausente";
+                  statusColor = Colors.blue;
+                } else if (tasks.any((task) => task['status'] == "pendiente")) {
+                  workerStatus = "Tareas por Trabajar";
                   statusColor = Colors.red;
+                } else if (tasks.isEmpty) {
+                  workerStatus = "Sin Tareas";
+                  statusColor = Colors.grey;
                 }
 
                 return ExpansionTile(
@@ -229,8 +232,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
           ? Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton(icon: Icon(Icons.edit, color: Colors.blue), onPressed: () {}),
-          IconButton(icon: Icon(Icons.delete, color: Colors.red), onPressed: () {}),
+          IconButton(icon: Icon(Icons.edit, color: Colors.blue), onPressed: () => _editTask(context, taskDoc)),
+          IconButton(icon: Icon(Icons.delete, color: Colors.red), onPressed: () => _confirmDeleteTask(context, taskDoc)),
         ],
       )
           : null,
@@ -238,9 +241,9 @@ class _ManagerScreenState extends State<ManagerScreen> {
   }
 
   /// Función para editar una tarea
-  void _editTask(BuildContext context, TaskEntity task) {
-    TextEditingController titleController = TextEditingController(text: task.title);
-    TextEditingController descriptionController = TextEditingController(text: task.description);
+  void _editTask(BuildContext context, QueryDocumentSnapshot taskDoc) {
+    TextEditingController titleController = TextEditingController(text: taskDoc['title']);
+    TextEditingController descriptionController = TextEditingController(text: taskDoc['description']);
 
     showDialog(
       context: context,
@@ -267,12 +270,15 @@ class _ManagerScreenState extends State<ManagerScreen> {
             ),
             TextButton(
               onPressed: () {
-                TaskEntity updatedTask = task.copyWith(
-                  title: titleController.text,
-                  description: descriptionController.text,
-                );
+                // Usar taskDoc.id para obtener el ID de la tarea
+                String taskId = taskDoc.id;
 
-                context.read<TaskCubit>().modifyTask(updatedTask);
+                // Crear una copia con los valores actualizados
+                FirebaseFirestore.instance.collection('tasks').doc(taskId).update({
+                  'title': titleController.text,
+                  'description': descriptionController.text,
+                });
+
                 Navigator.pop(context);
               },
               child: Text("Guardar"),
@@ -283,8 +289,9 @@ class _ManagerScreenState extends State<ManagerScreen> {
     );
   }
 
+
   /// Función para confirmar la eliminación de una tarea
-  void _confirmDeleteTask(BuildContext context, String taskId) {
+  void _confirmDeleteTask(BuildContext context, QueryDocumentSnapshot taskDoc) {
     showDialog(
       context: context,
       builder: (context) {
@@ -298,7 +305,9 @@ class _ManagerScreenState extends State<ManagerScreen> {
             ),
             TextButton(
               onPressed: () {
-                context.read<TaskCubit>().removeTask(taskId);
+                // Usar taskDoc.id para obtener el ID de la tarea
+                String taskId = taskDoc.id;
+                FirebaseFirestore.instance.collection('tasks').doc(taskId).delete();
                 Navigator.pop(context);
               },
               child: Text("Eliminar", style: TextStyle(color: Colors.red)),
@@ -308,6 +317,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
       },
     );
   }
+
 
   /// **Función para seleccionar un trabajador**
   Future<Map<String, String>?> _showUserSelectionDialog(BuildContext context) async {
