@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/presentation/blocs/task_cubit.dart';
@@ -160,11 +161,9 @@ class _ManagerScreenState extends State<ManagerScreen> {
 
   /// **Pantalla para ver Trabajadores**
   Widget _buildWorkerListScreen() {
+    final String currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .where('role', isEqualTo: 'trabajador')
-          .snapshots(),
+      stream: FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'trabajador').snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
@@ -172,59 +171,48 @@ class _ManagerScreenState extends State<ManagerScreen> {
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(child: Text("No hay trabajadores disponibles"));
         }
-        return ListView(
-          children: snapshot.data!.docs.map((doc) {
-            String workerId = doc.id;
-            return ExpansionTile(
-              leading: Icon(Icons.person),
-              title: Text(doc['username'] ?? 'Sin nombre'),
-              children: [
-                StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('tasks')
-                      .where('assignedTo', isEqualTo: workerId)
-                      .snapshots(),
-                  builder: (context, taskSnapshot) {
-                    if (!taskSnapshot.hasData || taskSnapshot.data!.docs.isEmpty) {
-                      return ListTile(title: Text("No tiene tareas asignadas"));
-                    }
-                    return Column(
-                      children: taskSnapshot.data!.docs.map((taskDoc) {
-                        TaskEntity task = TaskEntity(
-                          id: taskDoc.id,
-                          title: taskDoc['title'],
-                          description: taskDoc['description'],
-                          assignedTo: taskDoc['assignedTo'],
-                          status: taskDoc['status'],
-                          priority: taskDoc['priority'],
-                          createdBy: taskDoc['createdBy'],
-                          timestamp: taskDoc['timestamp'] is Timestamp
-                              ? (taskDoc['timestamp'] as Timestamp).toDate()
-                              : DateTime.fromMillisecondsSinceEpoch(taskDoc['timestamp']),
-                        );
 
-                        return ListTile(
-                          title: Text(task.title),
-                          subtitle: Text(task.description),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () => _editTask(context, task),
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _confirmDeleteTask(context, task.id),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  },
-                ),
-              ],
+        List<QueryDocumentSnapshot> workers = snapshot.data!.docs;
+
+        return ListView(
+          children: workers.map((doc) {
+            String workerId = doc.id;
+
+            return StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance.collection('tasks').where('assignedTo', isEqualTo: workerId).snapshots(),
+              builder: (context, taskSnapshot) {
+                if (!taskSnapshot.hasData) {
+                  return ListTile(title: Text("Cargando tareas..."));
+                }
+                List<QueryDocumentSnapshot> tasks = taskSnapshot.data!.docs;
+
+                // Filtrar tareas asignadas por el encargado actual
+                List<QueryDocumentSnapshot> assignedByCurrentUser = tasks.where((task) => task['createdBy'] == currentUserId).toList();
+                List<QueryDocumentSnapshot> otherTasks = tasks.where((task) => task['createdBy'] != currentUserId).toList();
+
+                // Determinar estado del trabajador
+                String workerStatus = "Libre";
+                Color statusColor = Colors.green;
+                if (tasks.any((task) => task['status'] == "en progreso")) {
+                  workerStatus = "Trabajando";
+                  statusColor = Colors.yellow;
+                } else if (tasks.isEmpty) {
+                  workerStatus = "Ausente";
+                  statusColor = Colors.red;
+                }
+
+                return ExpansionTile(
+                  leading: Icon(Icons.person, color: statusColor),
+                  title: Text(doc['username'] ?? 'Sin nombre'),
+                  subtitle: Text("Estado: $workerStatus", style: TextStyle(color: statusColor)),
+                  children: [
+                    if (tasks.isEmpty)
+                      ListTile(title: Text("No tiene tareas asignadas")),
+                    ...assignedByCurrentUser.map((taskDoc) => _buildTaskTile(taskDoc, currentUserId)),
+                    ...otherTasks.map((taskDoc) => _buildTaskTile(taskDoc, currentUserId)),
+                  ],
+                );
+              },
             );
           }).toList(),
         );
@@ -232,6 +220,22 @@ class _ManagerScreenState extends State<ManagerScreen> {
     );
   }
 
+  Widget _buildTaskTile(QueryDocumentSnapshot taskDoc, String currentUserId) {
+    bool canEditOrDelete = taskDoc['createdBy'] == currentUserId;
+    return ListTile(
+      title: Text(taskDoc['title']),
+      subtitle: Text("${taskDoc['description']}\nEstado: ${taskDoc['status']}"),
+      trailing: canEditOrDelete
+          ? Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(icon: Icon(Icons.edit, color: Colors.blue), onPressed: () {}),
+          IconButton(icon: Icon(Icons.delete, color: Colors.red), onPressed: () {}),
+        ],
+      )
+          : null,
+    );
+  }
 
   /// Función para editar una tarea
   void _editTask(BuildContext context, TaskEntity task) {
