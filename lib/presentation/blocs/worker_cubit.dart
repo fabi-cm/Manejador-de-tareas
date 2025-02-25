@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../domain/repositories/task_repository.dart';
 
 abstract class WorkerState {}
 
@@ -16,36 +16,29 @@ class WorkerError extends WorkerState {
 }
 
 class WorkerCubit extends Cubit<WorkerState> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final TaskRepository taskRepository;
   final String userId;
 
-  WorkerCubit({required this.userId}) : super(WorkerLoading()) {
+  WorkerCubit({required this.taskRepository, required this.userId}) : super(WorkerLoading()) {
     _fetchTasksInRealTime();
   }
 
   // Escuchar cambios en las tareas asignadas al trabajador
   void _fetchTasksInRealTime() {
     try {
-      _firestore
-          .collection('tasks')
-          .where('assignedTo', isEqualTo: userId)
-          .snapshots()
-          .listen((snapshot) {
+      taskRepository.getTasksAssignedTo(userId).listen((snapshot) {
         final tasks = snapshot.docs.map((doc) {
-          final data = doc.data();
+          final data = doc.data() as Map<String, dynamic>;
           return {
-            'id': doc.id, // ID de la tarea
+            'id': doc.id,
             'title': data['title'],
             'description': data['description'],
-            'assignedTo': data['assignedTo'],
-            'assignedBy': data['assignedBy'],
             'status': data['status'],
-            'priority': data['priority'],
-            'timestamp': data['timestamp'],
+            'priority': data['priority'].toString() ?? '0',
           };
         }).toList();
 
-        emit(WorkerLoaded(tasks)); // Emitir el estado con las tareas cargadas
+        emit(WorkerLoaded(tasks));
       });
     } catch (e) {
       emit(WorkerError("Error al cargar tareas: $e"));
@@ -55,9 +48,8 @@ class WorkerCubit extends Cubit<WorkerState> {
   // Actualizar el estado de una tarea
   Future<void> updateTaskStatus(String taskId, String newStatus) async {
     try {
-      await _firestore.collection('tasks').doc(taskId).update({
-        'status': newStatus,
-      });
+      await taskRepository.updateTaskStatus(taskId, newStatus);
+      //_fetchTasksInRealTime();
     } catch (e) {
       emit(WorkerError("Error al actualizar el estado de la tarea: $e"));
     }

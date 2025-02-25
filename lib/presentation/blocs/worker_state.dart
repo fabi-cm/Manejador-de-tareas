@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -66,8 +67,9 @@ class _WorkerTaskScreenState extends State<WorkerTaskScreen> {
               String priority = task['priority'].toString();
 
               return ListTile(
-                title: Text(title),
+                title: Text("$title, $priority"),
                 subtitle: Text(description),
+
                 trailing: DropdownButton<String>(
                   value: status,
                   items: ['Pendiente', 'En progreso', 'Completado']

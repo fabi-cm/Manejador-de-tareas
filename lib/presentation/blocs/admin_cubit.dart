@@ -28,4 +28,14 @@ class AdminCubit extends Cubit<AdminState> {
       emit(AdminError("Error al actualizar el rol del usuario: $e"));
     }
   }
+  Future<void> deleteUser(String userId) async {
+    try {
+      await userRepository.deleteUser(userId); // Eliminar el usuario
+      // No es necesario emitir un estado aquí, ya que el Stream se actualizará automáticamente
+    } catch (e) {
+      if (!isClosed) {
+        emit(AdminError("Error al eliminar el usuario: $e"));
+      }
+    }
+  }
 }
