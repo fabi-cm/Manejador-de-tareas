@@ -28,10 +28,10 @@ class TaskItem extends StatelessWidget {
         leading: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.assignment, color: _getStatusColor(status)), // 📌 Ícono de la tarea
-            const SizedBox(height: 4), // 🔥 Espacio entre ícono y prioridad
+            Icon(Icons.assignment, color: _getStatusColor(status)), // Ícono de la tarea
+            const SizedBox(height: 4), // Espacio entre ícono y prioridad
             Text(
-              priority, // 📌 Muestra la prioridad debajo del ícono
+              priority, //  Muestra la prioridad debajo del ícono
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
             ),
           ],
@@ -42,7 +42,7 @@ class TaskItem extends StatelessWidget {
             fontSize: 14,
             fontWeight: FontWeight.bold,
             fontStyle: FontStyle.italic,
-            decoration: status == "Completado" ? TextDecoration.lineThrough : TextDecoration.none,
+            decoration: status == "completado" ? TextDecoration.lineThrough : TextDecoration.none,
           ),
         ),
         subtitle: Text(description),
@@ -50,14 +50,14 @@ class TaskItem extends StatelessWidget {
           onPressed: () {
             String newStatus;
             switch (status) {
-              case 'Pendiente':
-                newStatus = 'En progreso';
+              case 'pendiente':
+                newStatus = 'en progreso';
                 break;
-              case 'En progreso':
-                newStatus = 'Completado';
+              case 'en progreso':
+                newStatus = 'completado';
                 break;
               default:
-                newStatus = 'Pendiente';
+                newStatus = 'pendiente';
             }
             onUpdateStatus(taskId, newStatus);
           },
@@ -75,28 +75,28 @@ class TaskItem extends StatelessWidget {
   /// 🔥 Método para obtener el color del estado
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'Pendiente':
+      case 'pendiente':
         return Colors.red;
-      case 'En progreso':
+      case 'en progreso':
         return Colors.blue;
-      case 'Completado':
+      case 'completado':
         return Colors.green;
       default:
-        return Colors.grey;
+        return Colors.red;
     }
   }
 
   /// 🔥 Método para obtener el icono según el estado
   Widget _getStatusIcon(String status) {
     switch (status) {
-      case 'Pendiente':
+      case 'pendiente':
         return const Icon(Icons.hourglass_empty, color: Colors.white); // ⏳ Pendiente
-      case 'En progreso':
+      case 'en progreso':
         return const Icon(Icons.work, color: Colors.white); // 🔄 En progreso
-      case 'Completado':
+      case 'completado':
         return const Icon(Icons.check_circle, color: Colors.white); // ✅ Completado
       default:
-        return const Icon(Icons.help_outline, color: Colors.white); // ❓ Desconocido
+        return const Icon(Icons.hourglass_empty, color: Colors.white); // ❓ Desconocido
     }
   }
 }
