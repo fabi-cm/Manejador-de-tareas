@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../main.dart';
 import '../../screens/login_screen.dart';
 
 // Definimos los estados
@@ -27,11 +28,16 @@ class AuthError extends AuthState {
   AuthError(this.message);
 }
 
+// Definimos los roles
+enum Role {
+  trabajador,
+  administrador,
+}
+
 // AuthCubit
 class AuthCubit extends Cubit<AuthState> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  //final FirebaseAuth _auth;
 
   AuthCubit() : super(AuthInitial());
 
@@ -61,7 +67,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-
   // Iniciar sesión
   Future<void> login(String email, String password) async {
     emit(AuthLoading());
@@ -76,6 +81,36 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> registerUserAsAdmin(String email, String password, String username) async {
+    try {
+      // Crear usuario en Firebase Auth (sin cambiar sesión)
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Guardar usuario en Firestore con su rol
+      await _firestore.collection("users").doc(userCredential.user!.uid).set({
+        "uid": userCredential.user!.uid,
+        "email": email,
+        "username": username,
+        "role": "trabajador", // Cambiar si es necesario
+      });
+
+      // ✅ Mostrar mensaje sin afectar sesión del admin
+      ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
+        SnackBar(
+          content: Text("$username registrado exitosamente"),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // ✅ Cerrar el diálogo sin cerrar sesión
+      Navigator.pop(navigatorKey.currentContext!);
+    } catch (e) {
+      emit(AuthError("Error en el registro: ${e.toString()}"));
+    }
+  }
 
 
   // Cerrar sesión

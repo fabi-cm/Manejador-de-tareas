@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../blocs/admin_cubit.dart';
 
-class RoleDialog extends StatelessWidget {
+class RoleDialog extends StatefulWidget {
   final String userId;
   final AdminCubit adminCubit; // Recibimos el AdminCubit como parámetro
 
@@ -12,15 +12,22 @@ class RoleDialog extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    String newRole = 'trabajador'; // Valor predeterminado
+  _RoleDialogState createState() => _RoleDialogState();
+}
 
+class _RoleDialogState extends State<RoleDialog> {
+  String newRole = 'trabajador'; // Valor predeterminado
+
+  @override
+  Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Cambiar Rol'),
       content: DropdownButton<String>(
         value: newRole,
         onChanged: (String? newValue) {
-          newRole = newValue!;
+          setState(() {
+            newRole = newValue!; // Actualizar el estado con el nuevo valor
+          });
         },
         items: ['trabajador', 'encargado', 'administrador']
             .map<DropdownMenuItem<String>>((String value) {
@@ -33,7 +40,7 @@ class RoleDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () {
-            adminCubit.updateUserRole(userId, newRole); // Usamos el AdminCubit pasado como parámetro
+            widget.adminCubit.updateUserRole(widget.userId, newRole); // Usamos el AdminCubit pasado como parámetro
             Navigator.of(context).pop();
           },
           child: const Text('Actualizar'),
