@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -45,6 +46,7 @@ class AuthCubit extends Cubit<AuthState> {
     User? user = _auth.currentUser;
     if (user != null) {
       _fetchUserRole(user);
+      saveFCMToken(user.uid);
     } else {
       emit(Unauthenticated());
     }
@@ -57,6 +59,7 @@ class AuthCubit extends Cubit<AuthState> {
       if (doc.exists) {
         String role = doc['role'] ?? 'trabajador';
         String username = doc['username'] ?? 'Otro';
+        await saveFCMToken(user.uid);
         emit(Authenticated(user, role, username));
       } else {
         emit(Unauthenticated());
@@ -75,6 +78,8 @@ class AuthCubit extends Cubit<AuthState> {
         password: password,
       );
       _fetchUserRole(userCredential.user!);
+
+      await saveFCMToken(userCredential.user!.uid);
     } catch (e) {
       emit(AuthError("Error en el login: $e"));
     }
@@ -111,6 +116,26 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> saveFCMToken(String userId) async {
+    try {
+      String? token = await FirebaseMessaging.instance.getToken();
+      if (token != null) {
+        print("FCM Token: $token"); // Verifica que el token se obtenga correctamente
+        await FirebaseFirestore.instance.collection('users').doc(userId).update({
+          'fcmToken': token,
+        });
+
+        FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+          print("New FCM Token: $newToken"); // Verifica que el token se actualice correctamente
+          FirebaseFirestore.instance.collection('users').doc(userId).update({
+            'fcmToken': newToken,
+          });
+        });
+      }
+    } catch (e) {
+      print("Error guardando FCM Token: $e");
+    }
+  }
 
   // Cerrar sesión
   Future<void> logout(BuildContext context) async {

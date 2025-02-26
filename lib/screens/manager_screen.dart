@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/presentation/blocs/task_cubit.dart';
 import 'package:task_manager/presentation/blocs/auth_cubit.dart';
 import '../domain/entities/task_entity.dart';
+import '../presentation/blocs/push_notification.dart';
 
 class ManagerScreen extends StatefulWidget {
   const ManagerScreen({super.key});
@@ -189,6 +190,24 @@ class _ManagerScreenState extends State<ManagerScreen> {
                       timestamp: DateTime.now(),
                     );
 
+                    await context.read<AuthCubit>().saveFCMToken(assignedUserId!);
+
+                    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(assignedUserId)
+                        .get();
+
+                    if (userDoc.exists) {
+                      String? fcmToken = userDoc['fcmToken'] ?? null; // Acceso seguro al campo
+                      if (fcmToken != null) {
+                        await sendPushNotification(fcmToken, newTask.title, newTask.description);
+                      } else {
+                        print("El usuario no tiene un FCM Token registrado");
+                      }
+                    } else {
+                      print("El documento del usuario no existe");
+                    }
+
                     await context.read<TaskCubit>().createTask(newTask);
 
                     if (mounted) {
@@ -212,7 +231,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
                   } catch (e) {
                     print("Error al crear la tarea: $e");
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Error al crear la tarea")),
+                      SnackBar(content: Text("Error al crear la tarea: $e")),
                     );
                   }
                 }
