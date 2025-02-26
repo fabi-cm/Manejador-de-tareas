@@ -12,6 +12,10 @@ class WorkerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthCubit>().state;
+    String? username;
+    if(authState is Authenticated){
+      username = authState.username;
+    }
 
     if (authState is! Authenticated || authState.role != "trabajador") {
       return Scaffold(
@@ -42,7 +46,13 @@ class WorkerScreen extends StatelessWidget {
       ),
       child: Scaffold(
         appBar: AppBar(
-          title: Text("Mis Tareas - ${authState.username ?? 'Usuario'}"),
+          title: Row(
+            children: [
+              Icon(Icons.person),
+              SizedBox(width: 4,),
+              Text('$username'),
+            ],
+          ),
           actions: [
             IconButton(
               icon: const Icon(Icons.logout),
@@ -50,27 +60,66 @@ class WorkerScreen extends StatelessWidget {
             ),
           ],
         ),
+
         body: BlocBuilder<WorkerCubit, WorkerState>(
           builder: (context, state) {
             if (state is WorkerLoading) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is WorkerLoaded) {
               final tasks = state.tasks;
-              return ListView.builder(
-                itemCount: tasks.length,
-                itemBuilder: (context, index) {
-                  final task = tasks[index];
-                  return TaskItem(
-                    taskId: task['id'],
-                    title: task['title'],
-                    description: task['description'],
-                    status: task['status'],
-                    priority: task['priority'].toString(),
-                    onUpdateStatus: (taskId, newStatus) {
-                      context.read<WorkerCubit>().updateTaskStatus(taskId, newStatus);
-                    },
-                  );
-                },
+              return Column(
+                children: [
+                  Text(
+                    "Mis Tareas",
+                    style: TextStyle(
+                      fontSize: 35,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange,
+                      fontFamily: 'italiano',
+                    ),
+                  ),
+                  RichText(
+                    text: TextSpan(
+                      style: TextStyle(
+                        fontSize: 16, // Tamaño de fuente
+                        color: Colors.black, // Color del texto
+                      ),
+                      children: [
+                        TextSpan(text: 'Completado '),
+                        WidgetSpan(
+                          child: Icon(Icons.check_circle, color: Colors.green, size: 16),
+                        ),
+                        TextSpan(text: ' En proceso '),
+                        WidgetSpan(
+                          child: Icon(Icons.work, color: Colors.blue, size: 16),
+                        ),
+                        TextSpan(text: ' Pendiente '),
+                        WidgetSpan(
+                          child: Icon(Icons.hourglass_full, color: Colors.red, size: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: tasks.length,
+                      itemBuilder: (context, index) {
+                        final task = tasks[index];
+                        return TaskItem(
+                          taskId: task['id'],
+                          title: task['title'],
+                          description: task['description'],
+                          status: task['status'],
+                          priority: task['priority'].toString(),
+                          onUpdateStatus: (taskId, newStatus) {
+                            context.read<WorkerCubit>().updateTaskStatus(taskId, newStatus);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
               );
             } else if (state is WorkerError) {
               return Center(child: Text(state.message));

@@ -20,6 +20,12 @@ class _AdminScreenState extends State<AdminScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthCubit>().state;
+    String? username;
+    if (authState is Authenticated) {
+      setState(() {
+        username = authState.username;
+      });
+    }
 
     if (authState is! Authenticated || authState.role != "administrador") {
       return Scaffold(
@@ -47,9 +53,12 @@ class _AdminScreenState extends State<AdminScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(
-            "Panel de Administrador - ${authState.username}",
-            style: const TextStyle(fontSize: 16),
+          title: Row(
+            children: [
+              Icon(Icons.person),
+              SizedBox(width: 4,),
+              Text('$username'),
+            ],
           ),
           actions: [
             IconButton(
@@ -93,44 +102,44 @@ class _AdminScreenState extends State<AdminScreen> {
                           final isExpanded = expandedUsers[userId] ?? false;
 
                           return Card(
-                            child: Column(
+                            margin: EdgeInsets.only(bottom: 16),
+                            child: ExpansionTile(
+                              leading: CircleAvatar(
+                                backgroundColor: _getRoleColor(role).withOpacity(0.2),
+                                child: Icon(Icons.person, color: _getRoleColor(role)),
+                              ),
+                              title: Text(
+                                user['username'] ?? 'Sin nombre',
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                "Rol: $role",
+                                style: TextStyle(color: _getRoleColor(role)),
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit, color: Colors.blue),
+                                    onPressed: () {
+                                      _showRoleDialog(context, userId);
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () {
+                                      _deleteUser(context, userId);
+                                    },
+                                  ),
+                                ],
+                              ),
+                              onExpansionChanged: (isExpanded) {
+                                setState(() {
+                                  expandedUsers[userId] = isExpanded;
+                                });
+                              },
                               children: [
-                                ListTile(
-                                  title: Text(user['username'] ?? 'Sin nombre'),
-                                  subtitle: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      _getRoleIcon(role),
-                                    ],
-                                  ),
-                                  leading: const Icon(Icons.person),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.edit,
-                                            color: Colors.blue),
-                                        onPressed: () {
-                                          _showRoleDialog(context, userId);
-                                        },
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete,
-                                            color: Colors.red),
-                                        onPressed: () {
-                                          _deleteUser(context, userId);
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                  onTap: () {
-                                    setState(() {
-                                      expandedUsers[userId] =
-                                      !(expandedUsers[userId] ?? false);
-                                    });
-                                  },
-                                ),
-                                if (isExpanded) _buildTaskList(userId, role),
+                                if (expandedUsers[userId] ?? false) _buildTaskList(userId, role),
                               ],
                             ),
                           );
@@ -189,12 +198,25 @@ class _AdminScreenState extends State<AdminScreen> {
                     userSnapshot.data!.get('username') ?? 'Desconocido';
               }
 
-              return ListTile(
-                title: Text(data['title'] ?? 'Sin título',),
-                subtitle: Text(
-                    '${data['description']}\n'
-                        'Estado: ${data['status']}\n'
-                        '${role == 'trabajador' ? 'Asignado por' : 'Asignado a'}: $assignedByName'),
+              return Card(
+                margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                child: ListTile(
+                  title: Text(data['title'] ?? 'Sin título'),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(data['description'] ?? 'Sin descripción'),
+                      SizedBox(height: 4),
+                      Text(
+                        "Estado: ${data['status']}",
+                        style: TextStyle(color: _getStatusColor(data['status'])),
+                      ),
+                      Text(
+                        "${role == 'trabajador' ? 'Asignado por' : 'Asignado a'}: $assignedByName",
+                      ),
+                    ],
+                  ),
+                ),
               );
             },
           );
@@ -212,8 +234,6 @@ class _AdminScreenState extends State<AdminScreen> {
       },
     );
   }
-
-
 
   void _showRoleDialog(BuildContext context, String userId) {
     final adminCubit = context.read<AdminCubit>();
@@ -258,16 +278,29 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 
-  Widget _getRoleIcon(String role) {
+  Color _getRoleColor(String role) {
     switch (role) {
-      case 'administrador':
-        return const Icon(Icons.admin_panel_settings_outlined, color: Colors.blue);
-      case 'encargado':
-        return const Icon(Icons.groups, color: Colors.green);
-      case 'trabajador':
-        return const Icon(Icons.build_sharp, color: Colors.orange);
+      case "administrador":
+        return Colors.purple;
+      case "encargado":
+        return Colors.blue;
+      case "trabajador":
+        return Colors.green;
       default:
-        return const Icon(Icons.person, color: Colors.grey);
+        return Colors.grey;
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case "pendiente":
+        return Colors.orange;
+      case "en progreso":
+        return Colors.blue;
+      case "completada":
+        return Colors.green;
+      default:
+        return Colors.grey;
     }
   }
 }
