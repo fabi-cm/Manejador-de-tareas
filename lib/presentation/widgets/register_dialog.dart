@@ -25,8 +25,15 @@ void showRegisterDialog(BuildContext context) {
         child: AlertDialog(
           title: const Text(
             "Registro de Usuario",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 40,
+              fontFamily: 'italiano',
+              color: Colors.orange,
+              fontWeight: FontWeight.bold,
+              decoration: TextDecoration.underline,
+              decorationColor: Colors.orange,
+              decorationThickness: 2,
+            ),            textAlign: TextAlign.center,
           ),
           content: SingleChildScrollView(
             child: Column(

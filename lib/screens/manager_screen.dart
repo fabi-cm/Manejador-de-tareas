@@ -63,8 +63,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
         title: Row(
           children: [
             Icon(Icons.person),
-            SizedBox(width: 4,),
-            Text('$username'),
+            SizedBox(width: 10,),
+            Text('$username', style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.w500),),
           ],
         ),
         actions: [
@@ -104,10 +104,13 @@ class _ManagerScreenState extends State<ManagerScreen> {
                   Text(
                     "Crear Nueva Tarea",
                     style: TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
-                        fontFamily: 'italiano',
+                      fontSize: 40,
+                      fontFamily: 'italiano',
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.underline,
+                      decorationColor: Colors.orange,
+                      decorationThickness: 2,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -119,7 +122,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      hintText: "Ej: Limpieza de",
+                      hintText: "Ej: Mantenimiento de Motor",
                     ),
                     onChanged: (_) => _checkForm(),
                   ),
@@ -131,7 +134,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      hintText: "Ej: Revisar y corregir errores en el informe.",
+                      hintText: "Ej: Mantenimiento Preventivo de Motor",
                     ),
                     maxLines: 3,
                     onChanged: (_) => _checkForm(),
@@ -241,7 +244,19 @@ class _ManagerScreenState extends State<ManagerScreen> {
     final String currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
     return Scaffold(
       appBar: AppBar(
-        title: Text("Lista de Trabajadores", style: TextStyle(fontSize: 40, fontFamily: 'italiano', color: Colors.orange, fontWeight: FontWeight.bold), textAlign: TextAlign.center,),
+        title: Text(
+          "Lista de Trabajadores",
+          style: TextStyle(
+            fontSize: 40,
+            fontFamily: 'italiano',
+            color: Colors.orange,
+            fontWeight: FontWeight.bold,
+            decoration: TextDecoration.underline,
+            decorationColor: Colors.orange,
+            decorationThickness: 2,
+          ),
+          textAlign: TextAlign.center,
+        ),
         actions: [
          /* IconButton(
             icon: Icon(Icons.filter_list),
@@ -300,10 +315,10 @@ class _ManagerScreenState extends State<ManagerScreen> {
                     statusColor = Colors.blue;
                   } else if (tasks.any((task) => task['status'] == "pendiente")) {
                     workerStatus = "Tareas por Trabajar";
-                    statusColor = Colors.orange;
+                    statusColor = Colors.red;
                   } else if (tasks.isEmpty) {
                     workerStatus = "Sin Tareas";
-                    statusColor = Colors.grey;
+                    statusColor = Colors.red;
                   }
 
                   return Card(
@@ -348,7 +363,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
       child: ListTile(
         title: Text(
           taskDoc['title'],
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold,),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,10 +399,10 @@ class _ManagerScreenState extends State<ManagerScreen> {
   Color _getStatusColor(String status) {
     switch (status) {
       case "pendiente":
-        return Colors.orange;
+        return Colors.red;
       case "en progreso":
         return Colors.blue;
-      case "completada":
+      case "completado":
         return Colors.green;
       default:
         return Colors.grey;

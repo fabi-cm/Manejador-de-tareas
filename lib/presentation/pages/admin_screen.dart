@@ -56,8 +56,8 @@ class _AdminScreenState extends State<AdminScreen> {
           title: Row(
             children: [
               Icon(Icons.person),
-              SizedBox(width: 4,),
-              Text('$username'),
+              SizedBox(width: 10,),
+              Text('$username', style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.w500),),
             ],
           ),
           actions: [
@@ -73,17 +73,16 @@ class _AdminScreenState extends State<AdminScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text(
-                "Lista de",
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const Text(
-                "Usuarios",
+                "Lista de usuarios",
                 style: TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'italiano',
-                    color: Colors.orange),
+                  fontSize: 40,
+                  fontFamily: 'italiano',
+                  color: Colors.orange,
+                  fontWeight: FontWeight.bold,
+                  decoration: TextDecoration.underline,
+                  decorationColor: Colors.orange,
+                  decorationThickness: 2,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
@@ -112,10 +111,14 @@ class _AdminScreenState extends State<AdminScreen> {
                                 user['username'] ?? 'Sin nombre',
                                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                               ),
-                              subtitle: Text(
-                                "Rol: $role",
-                                style: TextStyle(color: _getRoleColor(role)),
+                              subtitle: Align(
+                                alignment: Alignment.centerLeft,
+                                child: _getIcon(role),
                               ),
+                              /*subtitle: Text(
+                                role,
+                                style: TextStyle(color: _getRoleColor(role)),
+                              ),*/
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -167,24 +170,26 @@ class _AdminScreenState extends State<AdminScreen> {
   }
 
   Widget _buildTaskList(String userId, String role) {
-    return FutureBuilder<QuerySnapshot>(
-      future: FirebaseFirestore.instance.collection('tasks').get(),
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('tasks')
+          .where(role == 'trabajador' ? 'assignedTo' : 'createdBy', isEqualTo: userId)
+          .snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
+        if (snapshot.hasError) {
+          return Center(child: Text("Error: ${snapshot.error}"));
+        }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text('No hay tareas asignadas.'),
+          );
+        }
 
-        final tasks = snapshot.data!.docs
-            .where((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          if (role == 'trabajador') {
-            return data['assignedTo'] == userId;
-          } else if (role == 'encargado') {
-            return data['createdBy'] == userId;
-          }
-          return false;
-        })
-            .map((doc) {
+        final tasks = snapshot.data!.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
           return FutureBuilder<DocumentSnapshot>(
             future: FirebaseFirestore.instance
@@ -192,44 +197,43 @@ class _AdminScreenState extends State<AdminScreen> {
                 .doc(data['createdBy'])
                 .get(),
             builder: (context, userSnapshot) {
-              String assignedByName = 'Desconocido';
-              if (userSnapshot.hasData && userSnapshot.data!.exists) {
-                assignedByName =
-                    userSnapshot.data!.get('username') ?? 'Desconocido';
+
+              if (userSnapshot.hasError) {
+                return ListTile(
+                  title: Text("Error al cargar datos"),
+                );
+              }
+              if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+                return ListTile(
+                  title: Text("...."),
+                );
               }
 
-              return Card(
-                margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                child: ListTile(
-                  title: Text(data['title'] ?? 'Sin título'),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(data['description'] ?? 'Sin descripción'),
-                      SizedBox(height: 4),
-                      Text(
-                        "Estado: ${data['status']}",
-                        style: TextStyle(color: _getStatusColor(data['status'])),
-                      ),
-                      Text(
-                        "${role == 'trabajador' ? 'Asignado por' : 'Asignado a'}: $assignedByName",
-                      ),
-                    ],
-                  ),
+              String assignedByName = userSnapshot.data!.get('username') ?? 'Desconocido';
+
+              return ListTile(
+                title: Text(data['title'] ?? 'Sin título'),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(data['description'] ?? 'Sin descripción'),
+                    SizedBox(height: 4),
+                    Text(
+                      "Estado: ${data['status']}",
+                      style: TextStyle(color: _getStatusColor(data['status'])),
+                    ),
+                    Text(
+                      "${role == 'trabajador' ? 'Asignado por' : 'Asignado a'}: $assignedByName",
+                    ),
+                  ],
                 ),
               );
             },
           );
-        })
-            .toList();
+        }).toList();
 
         return Column(
-          children: tasks.isNotEmpty
-              ? tasks
-              : [const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Text('No hay tareas asignadas.'),
-          )],
+          children: tasks,
         );
       },
     );
@@ -281,7 +285,7 @@ class _AdminScreenState extends State<AdminScreen> {
   Color _getRoleColor(String role) {
     switch (role) {
       case "administrador":
-        return Colors.purple;
+        return Colors.orange;
       case "encargado":
         return Colors.blue;
       case "trabajador":
@@ -291,13 +295,26 @@ class _AdminScreenState extends State<AdminScreen> {
     }
   }
 
+  Icon _getIcon(String role){
+    switch (role) {
+      case "administrador":
+        return Icon(Icons.person, color: Colors.orange);
+      case "encargado":
+        return Icon(Icons.groups, color: Colors.blue);
+      case "trabajador":
+        return Icon(Icons.work, color: Colors.green);
+      default:
+        return Icon(Icons.person);
+    }
+  }
+
   Color _getStatusColor(String status) {
     switch (status) {
       case "pendiente":
         return Colors.orange;
       case "en progreso":
         return Colors.blue;
-      case "completada":
+      case "completado":
         return Colors.green;
       default:
         return Colors.grey;

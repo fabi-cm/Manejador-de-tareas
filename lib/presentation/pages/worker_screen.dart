@@ -49,13 +49,14 @@ class WorkerScreen extends StatelessWidget {
           title: Row(
             children: [
               Icon(Icons.person),
-              SizedBox(width: 4,),
-              Text('$username'),
+              SizedBox(width: 10,),
+              Text('$username', style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.w500),),
             ],
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.logout),
+              icon: const Icon(Icons.logout_rounded),
+
               onPressed: () => context.read<AuthCubit>().logout(context),
             ),
           ],
@@ -72,17 +73,25 @@ class WorkerScreen extends StatelessWidget {
                   Text(
                     "Mis Tareas",
                     style: TextStyle(
-                      fontSize: 35,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange,
+                      fontSize: 40,
                       fontFamily: 'italiano',
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.underline,
+                      decorationColor: Colors.orange,
+                      decorationThickness: 2,
                     ),
                   ),
                   RichText(
                     text: TextSpan(
                       style: TextStyle(
                         fontSize: 16, // Tamaño de fuente
-                        color: Colors.black, // Color del texto
+                        color: Colors.black,
+                        decoration: TextDecoration.underline,
+                        decorationColor: Colors.black,
+                        decorationThickness: 2,
+                        fontWeight: FontWeight.bold,
+                        fontStyle: FontStyle.italic
                       ),
                       children: [
                         TextSpan(text: 'Completado '),
