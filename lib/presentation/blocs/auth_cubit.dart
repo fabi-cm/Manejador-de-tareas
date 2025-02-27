@@ -75,10 +75,25 @@ class AuthCubit extends Cubit<AuthState> {
         password: password,
       );
       _fetchUserRole(userCredential.user!);
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = "Error en el login";
+
+      if (e.code == 'user-not-found') {
+        errorMessage = "El correo no existe";
+      } else if (e.code == 'wrong-password') {
+        errorMessage = "Contraseña inválida";
+      } else if (e.code == 'invalid-email') {
+        errorMessage = "Correo electrónico no válido";
+      } else if (e.code == 'user-disabled') {
+        errorMessage = "Cuenta deshabilitada. Contacta al administrador.";
+      }
+
+      emit(AuthError(errorMessage));
     } catch (e) {
-      emit(AuthError("Error en el login: $e"));
+      emit(AuthError("Error en el login: ${e.toString()}"));
     }
   }
+
 
   Future<void> registerUserAsAdmin(String email, String password, String username) async {
     try {

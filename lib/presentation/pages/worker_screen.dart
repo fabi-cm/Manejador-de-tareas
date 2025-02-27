@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/repositories/task_repository_impl.dart';
-import '../../domain/repositories/task_repository.dart';
 import '../blocs/auth_cubit.dart';
 import '../blocs/worker_cubit.dart';
 import '../widgets/task_item.dart';
@@ -13,7 +12,7 @@ class WorkerScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthCubit>().state;
     String? username;
-    if(authState is Authenticated){
+    if (authState is Authenticated) {
       username = authState.username;
     }
 
@@ -49,25 +48,31 @@ class WorkerScreen extends StatelessWidget {
           title: Row(
             children: [
               Icon(Icons.person),
-              SizedBox(width: 10,),
-              Text('$username', style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.w500),),
+              SizedBox(width: 10),
+              Text(
+                '$username',
+                style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.w500),
+              ),
             ],
           ),
           actions: [
             IconButton(
               icon: const Icon(Icons.logout_rounded),
-
               onPressed: () => context.read<AuthCubit>().logout(context),
             ),
           ],
         ),
-
         body: BlocBuilder<WorkerCubit, WorkerState>(
           builder: (context, state) {
             if (state is WorkerLoading) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is WorkerLoaded) {
               final tasks = state.tasks;
+
+              // Separar tareas completadas de tareas activas
+              final activeTasks = tasks.where((task) => task['status'] != 'completado').toList();
+              final completedTasks = tasks.where((task) => task['status'] == 'completado').toList();
+
               return Column(
                 children: [
                   Text(
@@ -85,13 +90,13 @@ class WorkerScreen extends StatelessWidget {
                   RichText(
                     text: TextSpan(
                       style: TextStyle(
-                        fontSize: 16, // Tamaño de fuente
+                        fontSize: 16,
                         color: Colors.black,
                         decoration: TextDecoration.underline,
                         decorationColor: Colors.black,
                         decorationThickness: 2,
                         fontWeight: FontWeight.bold,
-                        fontStyle: FontStyle.italic
+                        fontStyle: FontStyle.italic,
                       ),
                       children: [
                         TextSpan(text: 'Completado '),
@@ -112,9 +117,9 @@ class WorkerScreen extends StatelessWidget {
                   const SizedBox(height: 10),
                   Expanded(
                     child: ListView.builder(
-                      itemCount: tasks.length,
+                      itemCount: activeTasks.length,
                       itemBuilder: (context, index) {
-                        final task = tasks[index];
+                        final task = activeTasks[index];
                         return TaskItem(
                           taskId: task['id'],
                           title: task['title'],
@@ -128,6 +133,37 @@ class WorkerScreen extends StatelessWidget {
                       },
                     ),
                   ),
+                  if (completedTasks.isNotEmpty)
+                    ExpansionTile(
+                      collapsedIconColor: Colors.green,
+                      collapsedTextColor: Colors.green,
+                      title: Text(
+                        "Tareas Completadas (${completedTasks.length})",
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontStyle: FontStyle.italic),
+                      ),
+                      children: [
+                        SizedBox(
+                          height: 300, // Ajusta la altura según lo necesites
+                          child: ListView.builder(
+                            itemCount: completedTasks.length,
+                            itemBuilder: (context, index) {
+                              final task = completedTasks[index];
+                              return TaskItem(
+                                taskId: task['id'],
+                                title: task['title'],
+                                description: task['description'],
+                                status: task['status'],
+                                priority: task['priority'].toString(),
+                                onUpdateStatus: (taskId, newStatus) {
+                                  context.read<WorkerCubit>().updateTaskStatus(taskId, newStatus);
+                                },
+                              );
+                            },
+                          ),
+                        )
+
+                      ],
+                    ),
                 ],
               );
             } else if (state is WorkerError) {
