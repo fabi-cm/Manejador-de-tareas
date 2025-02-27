@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/presentation/blocs/task_cubit.dart';
 import 'package:task_manager/presentation/blocs/auth_cubit.dart';
 import '../domain/entities/task_entity.dart';
+import '../presentation/widgets/SearchAndFilterWidget.dart';
 
 class ManagerScreen extends StatefulWidget {
   const ManagerScreen({super.key});
@@ -16,7 +17,9 @@ class ManagerScreen extends StatefulWidget {
 class _ManagerScreenState extends State<ManagerScreen> {
   int _selectedIndex = 0; // Índice de la barra de navegación
   String? currentUserId; // ID del usuario autenticado
-  String ? username = 'invitado';
+  String? username = 'invitado';
+  String searchQuery = '';
+  String? selectedFilter;
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
@@ -36,7 +39,6 @@ class _ManagerScreenState extends State<ManagerScreen> {
       setState(() {
         currentUserId = authState.user.uid;
         username = authState.username;
-
       });
     }
   }
@@ -63,8 +65,14 @@ class _ManagerScreenState extends State<ManagerScreen> {
         title: Row(
           children: [
             Icon(Icons.person),
-            SizedBox(width: 10,),
-            Text('$username', style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.w500),),
+            SizedBox(
+              width: 10,
+            ),
+            Text(
+              '$username',
+              style: TextStyle(
+                  fontStyle: FontStyle.italic, fontWeight: FontWeight.w500),
+            ),
           ],
         ),
         actions: [
@@ -74,7 +82,9 @@ class _ManagerScreenState extends State<ManagerScreen> {
           ),
         ],
       ),
-      body: _selectedIndex == 0 ? _buildCreateTaskScreen() : _buildWorkerListScreen(),
+      body: _selectedIndex == 0
+          ? _buildCreateTaskScreen()
+          : _buildWorkerListScreen(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) {
@@ -84,7 +94,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
         },
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.task), label: "Crear Tarea"),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: "Trabajadores"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.people), label: "Trabajadores"),
         ],
       ),
     );
@@ -144,12 +155,16 @@ class _ManagerScreenState extends State<ManagerScreen> {
                     children: [
                       Text(
                         "Asignar a *",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontStyle: FontStyle.italic),
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            fontStyle: FontStyle.italic),
                       ),
                       SizedBox(width: 8),
                       ElevatedButton(
                         onPressed: () async {
-                          final selectedUser = await _showUserSelectionDialog(context);
+                          final selectedUser =
+                              await _showUserSelectionDialog(context);
                           if (selectedUser != null) {
                             setState(() {
                               assignedUserId = selectedUser['uid'];
@@ -159,7 +174,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -180,45 +196,45 @@ class _ManagerScreenState extends State<ManagerScreen> {
               child: ElevatedButton(
                 onPressed: isButtonEnabled
                     ? () async {
-                  try {
-                    final newTask = TaskEntity(
-                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      title: _titleController.text,
-                      description: _descriptionController.text,
-                      assignedTo: assignedUserId!,
-                      status: "pendiente",
-                      priority: 1,
-                      createdBy: currentUserId ?? "ID_DESCONOCIDO",
-                      timestamp: DateTime.now(),
-                    );
+                        try {
+                          final newTask = TaskEntity(
+                            id: DateTime.now()
+                                .millisecondsSinceEpoch
+                                .toString(),
+                            title: _titleController.text,
+                            description: _descriptionController.text,
+                            assignedTo: assignedUserId!,
+                            status: "pendiente",
+                            priority: 1,
+                            createdBy: currentUserId ?? "ID_DESCONOCIDO",
+                            timestamp: DateTime.now(),
+                          );
 
-                    await context.read<TaskCubit>().createTask(newTask);
+                          await context.read<TaskCubit>().createTask(newTask);
 
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text("Tarea creada con éxito"),
-                            backgroundColor: Colors.green,
-                        ),
-                      );
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("Tarea creada con éxito"),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
 
-
-
-                      setState(() {
-                        _titleController.clear();
-                        _descriptionController.clear();
-                        assignedUserId = null;
-                        assignedUserName = null;
-                        isButtonEnabled = false;
-                      });
-                    }
-                  } catch (e) {
-                    print("Error al crear la tarea: $e");
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Error al crear la tarea")),
-                    );
-                  }
-                }
+                            setState(() {
+                              _titleController.clear();
+                              _descriptionController.clear();
+                              assignedUserId = null;
+                              assignedUserName = null;
+                              isButtonEnabled = false;
+                            });
+                          }
+                        } catch (e) {
+                          print("Error al crear la tarea: $e");
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Error al crear la tarea")),
+                          );
+                        }
+                      }
                     : null,
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 16),
@@ -229,7 +245,12 @@ class _ManagerScreenState extends State<ManagerScreen> {
                 ),
                 child: Text(
                   "Crear Tarea",
-                  style: TextStyle(fontSize: 18, color: Colors.white, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold,),
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontStyle: FontStyle.italic,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -242,6 +263,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
   /// **Pantalla para ver Trabajadores**
   Widget _buildWorkerListScreen() {
     final String currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -257,102 +279,172 @@ class _ManagerScreenState extends State<ManagerScreen> {
           ),
           textAlign: TextAlign.center,
         ),
-        actions: [
-         /* IconButton(
-            icon: Icon(Icons.filter_list),
-            onPressed: () {
-              //  filtro para ordenar trabajadores
+      ),
+      body: Column(
+        children: [
+          // Agregar el SearchAndFilterWidget
+          SearchAndFilterWidget(
+            onSearchChanged: (query) {
+              setState(() {
+                searchQuery =
+                    query.toLowerCase(); // Actualizar la consulta de búsqueda
+              });
             },
-          ),*/
+            onFilterChanged: (filter) {
+              setState(() {
+                selectedFilter = filter; // Actualizar el filtro seleccionado
+              });
+            },
+          ),
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .where('role', isEqualTo: 'trabajador')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(child: Text("No hay trabajadores disponibles"));
+                }
+
+                List<QueryDocumentSnapshot> workers = snapshot.data!.docs;
+
+                // Filtrar trabajadores basados en la búsqueda y el filtro
+                List<QueryDocumentSnapshot> filteredWorkers =
+                    workers.where((doc) {
+                  final String username = doc['username']?.toLowerCase() ?? '';
+                  final bool matchesSearch = username.contains(searchQuery);
+
+                  // Obtener el estado del trabajador
+                  final String workerStatus =
+                      _getWorkerStatus(doc.id) as String;
+
+                  final bool matchesFilter =
+                      selectedFilter == null || selectedFilter == workerStatus;
+
+                  return matchesSearch && matchesFilter;
+                }).toList();
+
+                return ListView(
+                  padding: EdgeInsets.all(16),
+                  children: filteredWorkers.map((doc) {
+                    String workerId = doc.id;
+
+                    return StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('tasks')
+                          .where('assignedTo', isEqualTo: workerId)
+                          .snapshots(),
+                      builder: (context, taskSnapshot) {
+                        if (!taskSnapshot.hasData) {
+                          return Card(
+                            child: ListTile(
+                              title: Text("Cargando tareas..."),
+                            ),
+                          );
+                        }
+
+                        // Obtener las tareas
+                        final tasks = taskSnapshot.data!.docs;
+
+                        // Filtrar tareas asignadas por el encargado actual
+                        List<QueryDocumentSnapshot> assignedByCurrentUser =
+                            tasks
+                                .where((task) =>
+                                    task['createdBy'] == currentUserId)
+                                .toList();
+                        List<QueryDocumentSnapshot> otherTasks = tasks
+                            .where((task) => task['createdBy'] != currentUserId)
+                            .toList();
+
+                        // Usar un FutureBuilder para obtener el estado del trabajador
+                        return FutureBuilder<String>(
+                          future: _getWorkerStatus(
+                              workerId), // Llamada a la función asíncrona
+                          builder: (context, statusSnapshot) {
+                            if (!statusSnapshot.hasData) {
+                              return Card(
+                                child: ListTile(
+                                  title: Text("Cargando estado..."),
+                                ),
+                              );
+                            }
+
+                            // Estado del trabajador
+                            final workerStatus = statusSnapshot.data!;
+                            final statusColor = _getStatusColor(workerStatus);
+
+                            return Card(
+                              margin: EdgeInsets.only(bottom: 16),
+                              child: ExpansionTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: statusColor.withOpacity(0.2),
+                                  child: Icon(Icons.person, color: statusColor),
+                                ),
+                                title: Text(
+                                  doc['username'] ?? 'Sin nombre',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                subtitle: Text(
+                                  "Estado: $workerStatus",
+                                  style: TextStyle(color: statusColor),
+                                ),
+                                children: [
+                                  if (tasks.isEmpty)
+                                    ListTile(
+                                      title: Text("No tiene tareas asignadas"),
+                                    ),
+                                  ...assignedByCurrentUser.map((taskDoc) =>
+                                      _buildTaskTile(taskDoc, currentUserId)),
+                                  ...otherTasks.map((taskDoc) =>
+                                      _buildTaskTile(taskDoc, currentUserId)),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+          ),
         ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('users')
-            .where('role', isEqualTo: 'trabajador')
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text("No hay trabajadores disponibles"));
-          }
-
-          List<QueryDocumentSnapshot> workers = snapshot.data!.docs;
-
-          return ListView(
-            padding: EdgeInsets.all(16),
-            children: workers.map((doc) {
-              String workerId = doc.id;
-
-              return StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('tasks')
-                    .where('assignedTo', isEqualTo: workerId)
-                    .snapshots(),
-                builder: (context, taskSnapshot) {
-                  if (!taskSnapshot.hasData) {
-                    return Card(
-                      child: ListTile(
-                        title: Text("Cargando tareas..."),
-                      ),
-                    );
-                  }
-                  List<QueryDocumentSnapshot> tasks = taskSnapshot.data!.docs;
-
-                  // Filtrar tareas asignadas por el encargado actual
-                  List<QueryDocumentSnapshot> assignedByCurrentUser =
-                  tasks.where((task) => task['createdBy'] == currentUserId).toList();
-                  List<QueryDocumentSnapshot> otherTasks =
-                  tasks.where((task) => task['createdBy'] != currentUserId).toList();
-
-                  // Determinar estado del trabajador
-                  String workerStatus = "Libre";
-                  Color statusColor = Colors.green;
-                  if (tasks.any((task) => task['status'] == "en progreso")) {
-                    workerStatus = "Trabajando";
-                    statusColor = Colors.blue;
-                  } else if (tasks.any((task) => task['status'] == "pendiente")) {
-                    workerStatus = "Tareas por Trabajar";
-                    statusColor = Colors.red;
-                  } else if (tasks.isEmpty) {
-                    workerStatus = "Sin Tareas";
-                    statusColor = Colors.red;
-                  }
-
-                  return Card(
-                    margin: EdgeInsets.only(bottom: 16),
-                    child: ExpansionTile(
-                      leading: CircleAvatar(
-                        backgroundColor: statusColor.withOpacity(0.2),
-                        child: Icon(Icons.person, color: statusColor),
-                      ),
-                      title: Text(
-                        doc['username'] ?? 'Sin nombre',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        "Estado: $workerStatus",
-                        style: TextStyle(color: statusColor),
-                      ),
-                      children: [
-                        if (tasks.isEmpty)
-                          ListTile(
-                            title: Text("No tiene tareas asignadas"),
-                          ),
-                        ...assignedByCurrentUser.map((taskDoc) => _buildTaskTile(taskDoc, currentUserId)),
-                        ...otherTasks.map((taskDoc) => _buildTaskTile(taskDoc, currentUserId)),
-                      ],
-                    ),
-                  );
-                },
-              );
-            }).toList(),
-          );
-        },
-      ),
     );
+  }
+
+  /// Complementos adicionales para el filtro y buscador
+  Future<String> _getWorkerStatus(String workerId) async {
+    try {
+      // Obtener las tareas asignadas al trabajador
+      final taskSnapshot = await FirebaseFirestore.instance
+          .collection('tasks')
+          .where('assignedTo', isEqualTo: workerId)
+          .get();
+
+      final tasks = taskSnapshot.docs;
+
+      // Determinar el estado del trabajador
+      if (tasks.any((task) => task['status'] == "en progreso")) {
+        return "Trabajando";
+      } else if (tasks.any((task) => task['status'] == "pendiente")) {
+        return "Tareas por Trabajar";
+      } else if (tasks.isEmpty) {
+        return "Sin Tareas";
+      } else {
+        return "Libre";
+      }
+    } catch (e) {
+      print("Error al obtener el estado del trabajador: $e");
+      return "Error";
+    }
   }
 
   /// **Widget para mostrar una tarea**
@@ -363,7 +455,9 @@ class _ManagerScreenState extends State<ManagerScreen> {
       child: ListTile(
         title: Text(
           taskDoc['title'],
-          style: TextStyle(fontWeight: FontWeight.bold,),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,18 +472,18 @@ class _ManagerScreenState extends State<ManagerScreen> {
         ),
         trailing: canEditOrDelete
             ? Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: Icon(Icons.edit, color: Colors.blue),
-              onPressed: () => _editTask(context, taskDoc),
-            ),
-            IconButton(
-              icon: Icon(Icons.delete, color: Colors.red),
-              onPressed: () => _confirmDeleteTask(context, taskDoc),
-            ),
-          ],
-        )
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.edit, color: Colors.blue),
+                    onPressed: () => _editTask(context, taskDoc),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _confirmDeleteTask(context, taskDoc),
+                  ),
+                ],
+              )
             : null,
       ),
     );
@@ -411,8 +505,10 @@ class _ManagerScreenState extends State<ManagerScreen> {
 
   /// Función para editar una tarea
   void _editTask(BuildContext context, QueryDocumentSnapshot taskDoc) {
-    TextEditingController titleController = TextEditingController(text: taskDoc['title']);
-    TextEditingController descriptionController = TextEditingController(text: taskDoc['description']);
+    TextEditingController titleController =
+        TextEditingController(text: taskDoc['title']);
+    TextEditingController descriptionController =
+        TextEditingController(text: taskDoc['description']);
 
     showDialog(
       context: context,
@@ -443,7 +539,10 @@ class _ManagerScreenState extends State<ManagerScreen> {
                 String taskId = taskDoc.id;
 
                 // Crear una copia con los valores actualizados
-                FirebaseFirestore.instance.collection('tasks').doc(taskId).update({
+                FirebaseFirestore.instance
+                    .collection('tasks')
+                    .doc(taskId)
+                    .update({
                   'title': titleController.text,
                   'description': descriptionController.text,
                 });
@@ -457,7 +556,6 @@ class _ManagerScreenState extends State<ManagerScreen> {
       },
     );
   }
-
 
   /// Función para confirmar la eliminación de una tarea
   void _confirmDeleteTask(BuildContext context, QueryDocumentSnapshot taskDoc) {
@@ -476,7 +574,10 @@ class _ManagerScreenState extends State<ManagerScreen> {
               onPressed: () {
                 // Usar taskDoc.id para obtener el ID de la tarea
                 String taskId = taskDoc.id;
-                FirebaseFirestore.instance.collection('tasks').doc(taskId).delete();
+                FirebaseFirestore.instance
+                    .collection('tasks')
+                    .doc(taskId)
+                    .delete();
                 Navigator.pop(context);
               },
               child: Text("Eliminar", style: TextStyle(color: Colors.red)),
@@ -487,22 +588,33 @@ class _ManagerScreenState extends State<ManagerScreen> {
     );
   }
 
-
   /// **Función para seleccionar un trabajador**
-  Future<Map<String, String>?> _showUserSelectionDialog(BuildContext context) async {
+  Future<Map<String, String>?> _showUserSelectionDialog(
+      BuildContext context) async {
     List<Map<String, String>> workersList = [];
-    final snapshot = await FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'trabajador').get();
-    workersList = snapshot.docs.map((doc) => {'uid': doc.id, 'username': doc['username'] as String}).toList();
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('role', isEqualTo: 'trabajador')
+        .get();
+    workersList = snapshot.docs
+        .map((doc) => {'uid': doc.id, 'username': doc['username'] as String})
+        .toList();
     return showDialog<Map<String, String>?>(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text("Seleccionar Trabajador"),
           content: workersList.isEmpty
-              ? Text("No hay trabajadores disponibles",)
-              : Column(mainAxisSize: MainAxisSize.min, children: workersList.map((worker) {
-            return ListTile(title: Text(worker['username']!), onTap: () => Navigator.pop(context, worker));
-          }).toList()),
+              ? Text(
+                  "No hay trabajadores disponibles",
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: workersList.map((worker) {
+                    return ListTile(
+                        title: Text(worker['username']!),
+                        onTap: () => Navigator.pop(context, worker));
+                  }).toList()),
         );
       },
     );
