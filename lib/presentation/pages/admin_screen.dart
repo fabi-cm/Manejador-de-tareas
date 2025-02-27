@@ -14,20 +14,52 @@ class AdminScreen extends StatefulWidget {
   _AdminScreenState createState() => _AdminScreenState();
 }
 
+class UserRoles {
+  static const String admin = "administrador";
+  static const String manager = "encargado";
+  static const String worker = "trabajador";
+}
+
+class RoleUtils {
+  static Color getRoleColor(String role) {
+    switch (role) {
+      case UserRoles.admin:
+        return Colors.orange;
+      case UserRoles.manager:
+        return Colors.blue;
+      case UserRoles.worker:
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  static Icon getRoleIcon(String role) {
+    switch (role) {
+      case UserRoles.admin:
+        return Icon(Icons.person, color: Colors.orange);
+      case UserRoles.manager:
+        return Icon(Icons.groups, color: Colors.blue);
+      case UserRoles.worker:
+        return Icon(Icons.work, color: Colors.green);
+      default:
+        return Icon(Icons.person);
+    }
+  }
+}
+
 class _AdminScreenState extends State<AdminScreen> {
-  Map<String, bool> expandedUsers = {}; // Controla qué usuario está expandido
+  Map<String, bool> expandedUsers = {};
 
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthCubit>().state;
     String? username;
     if (authState is Authenticated) {
-      setState(() {
-        username = authState.username;
-      });
+      username = authState.username;
     }
 
-    if (authState is! Authenticated || authState.role != "administrador") {
+    if (authState is! Authenticated || authState.role != UserRoles.admin) {
       return Scaffold(
         body: Center(
           child: Column(
@@ -56,8 +88,8 @@ class _AdminScreenState extends State<AdminScreen> {
           title: Row(
             children: [
               Icon(Icons.person),
-              SizedBox(width: 10,),
-              Text('$username', style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.w500),),
+              SizedBox(width: 10),
+              Text('$username', style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.w500)),
             ],
           ),
           actions: [
@@ -70,7 +102,6 @@ class _AdminScreenState extends State<AdminScreen> {
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text(
                 "Lista de usuarios",
@@ -104,8 +135,8 @@ class _AdminScreenState extends State<AdminScreen> {
                             margin: EdgeInsets.only(bottom: 16),
                             child: ExpansionTile(
                               leading: CircleAvatar(
-                                backgroundColor: _getRoleColor(role).withOpacity(0.2),
-                                child: Icon(Icons.person, color: _getRoleColor(role)),
+                                backgroundColor: RoleUtils.getRoleColor(role).withOpacity(0.2),
+                                child: Icon(Icons.person, color: RoleUtils.getRoleColor(role)),
                               ),
                               title: Text(
                                 user['username'] ?? 'Sin nombre',
@@ -113,12 +144,8 @@ class _AdminScreenState extends State<AdminScreen> {
                               ),
                               subtitle: Align(
                                 alignment: Alignment.centerLeft,
-                                child: _getIcon(role),
+                                child: RoleUtils.getRoleIcon(role),
                               ),
-                              /*subtitle: Text(
-                                role,
-                                style: TextStyle(color: _getRoleColor(role)),
-                              ),*/
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -169,6 +196,10 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 
+// Resto del código...
+
+
+
   Widget _buildTaskList(String userId, String role) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -191,42 +222,67 @@ class _AdminScreenState extends State<AdminScreen> {
 
         final tasks = snapshot.data!.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
+          final createdBy = data['createdBy'];
+          final assignedTo = data['assignedTo'];
+
+          // Obtener el nombre del creador y del asignado
           return FutureBuilder<DocumentSnapshot>(
             future: FirebaseFirestore.instance
                 .collection('users')
-                .doc(data['createdBy'])
+                .doc(createdBy)
                 .get(),
-            builder: (context, userSnapshot) {
-
-              if (userSnapshot.hasError) {
+            builder: (context, createdBySnapshot) {
+              if (createdBySnapshot.connectionState == ConnectionState.waiting) {
                 return ListTile(
-                  title: Text("Error al cargar datos"),
+                  title: Text("Cargando..."),
                 );
               }
-              if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+              if (createdBySnapshot.hasError || !createdBySnapshot.hasData || !createdBySnapshot.data!.exists) {
                 return ListTile(
-                  title: Text("...."),
+                  title: Text("Error al cargar datos del creador"),
                 );
               }
 
-              String assignedByName = userSnapshot.data!.get('username') ?? 'Desconocido';
+              final createdByName = createdBySnapshot.data!.get('username') ?? 'Desconocido';
 
-              return ListTile(
-                title: Text(data['title'] ?? 'Sin título'),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(data['description'] ?? 'Sin descripción'),
-                    SizedBox(height: 4),
-                    Text(
-                      "Estado: ${data['status']}",
-                      style: TextStyle(color: _getStatusColor(data['status'])),
+              return FutureBuilder<DocumentSnapshot>(
+                future: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(assignedTo)
+                    .get(),
+                builder: (context, assignedToSnapshot) {
+                  if (assignedToSnapshot.connectionState == ConnectionState.waiting) {
+                    return ListTile(
+                      title: Text("Cargando..."),
+                    );
+                  }
+                  if (assignedToSnapshot.hasError || !assignedToSnapshot.hasData || !assignedToSnapshot.data!.exists) {
+                    return ListTile(
+                      title: Text("Error al cargar datos del asignado"),
+                    );
+                  }
+
+                  final assignedToName = assignedToSnapshot.data!.get('username') ?? 'Desconocido';
+
+                  return ListTile(
+                    title: Text(data['title'] ?? 'Sin título'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(data['description'] ?? 'Sin descripción'),
+                        SizedBox(height: 4),
+                        Text(
+                          "Estado: ${data['status']}",
+                          style: TextStyle(color: _getStatusColor(data['status'])),
+                        ),
+                        if (role == 'trabajador')
+                          Text("Asignado por: $createdByName"),
+                        if (role == 'encargado')
+                          Text("Asignado a: $assignedToName"),
+                      ],
                     ),
-                    Text(
-                      "${role == 'trabajador' ? 'Asignado por' : 'Asignado a'}: $assignedByName",
-                    ),
-                  ],
-                ),
+                  );
+                },
               );
             },
           );
@@ -239,74 +295,38 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 
+
   void _showRoleDialog(BuildContext context, String userId) {
     final adminCubit = context.read<AdminCubit>();
-
     showDialog(
       context: context,
-      builder: (context) {
-        return RoleDialog(
-          userId: userId,
-          adminCubit: adminCubit,
-        );
-      },
+      builder: (_) => RoleDialog(userId: userId, adminCubit: adminCubit),
     );
   }
 
   void _deleteUser(BuildContext context, String userId) {
     final adminCubit = context.read<AdminCubit>();
-
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Eliminar Usuario"),
-          content: const Text("¿Estás seguro de que deseas eliminar este usuario?"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text("Cancelar"),
-            ),
-            TextButton(
-              onPressed: () {
-                adminCubit.deleteUser(userId);
-                Navigator.pop(context);
-              },
-              child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
+      builder: (_) => AlertDialog(
+        title: const Text("Eliminar Usuario"),
+        content: const Text("¿Estás seguro de que deseas eliminar este usuario?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancelar")),
+          TextButton(
+            onPressed: () {
+              adminCubit.deleteUser(userId);
+              Navigator.pop(context);
+            },
+            child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 
-  Color _getRoleColor(String role) {
-    switch (role) {
-      case "administrador":
-        return Colors.orange;
-      case "encargado":
-        return Colors.blue;
-      case "trabajador":
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
 
-  Icon _getIcon(String role){
-    switch (role) {
-      case "administrador":
-        return Icon(Icons.person, color: Colors.orange);
-      case "encargado":
-        return Icon(Icons.groups, color: Colors.blue);
-      case "trabajador":
-        return Icon(Icons.work, color: Colors.green);
-      default:
-        return Icon(Icons.person);
-    }
-  }
+
 
   Color _getStatusColor(String status) {
     switch (status) {
@@ -320,4 +340,5 @@ class _AdminScreenState extends State<AdminScreen> {
         return Colors.grey;
     }
   }
+
 }

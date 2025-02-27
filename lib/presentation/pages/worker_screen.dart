@@ -57,7 +57,7 @@ class WorkerScreen extends StatelessWidget {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.logout_rounded),
+              icon: const Icon(Icons.logout_rounded, size: 34, color: Colors.black,),
               onPressed: () => context.read<AuthCubit>().logout(context),
             ),
           ],
@@ -137,9 +137,11 @@ class WorkerScreen extends StatelessWidget {
                     ExpansionTile(
                       collapsedIconColor: Colors.green,
                       collapsedTextColor: Colors.green,
+
                       title: Text(
                         "Tareas Completadas (${completedTasks.length})",
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontStyle: FontStyle.italic),
+                        textAlign: TextAlign.center,
                       ),
                       children: [
                         SizedBox(
