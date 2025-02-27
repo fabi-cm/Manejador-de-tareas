@@ -256,11 +256,11 @@ class _AdminScreenState extends State<AdminScreen> {
                       title: Text("Cargando..."),
                     );
                   }
-                  if (assignedToSnapshot.hasError || !assignedToSnapshot.hasData || !assignedToSnapshot.data!.exists) {
+                  /*if (assignedToSnapshot.hasError || !assignedToSnapshot.hasData || !assignedToSnapshot.data!.exists) {
                     return ListTile(
                       title: Text("Error al cargar datos del asignado"),
                     );
-                  }
+                  }*/
 
                   final assignedToName = assignedToSnapshot.data!.get('username') ?? 'Desconocido';
 

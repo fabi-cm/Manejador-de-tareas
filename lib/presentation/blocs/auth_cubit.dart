@@ -120,7 +120,7 @@ class AuthCubit extends Cubit<AuthState> {
       );
 
       // ✅ Cerrar el diálogo sin cerrar sesión
-      Navigator.pop(navigatorKey.currentContext!);
+     // Navigator.pop(navigatorKey.currentContext!);
     } catch (e) {
       emit(AuthError("Error en el registro: ${e.toString()}"));
     }

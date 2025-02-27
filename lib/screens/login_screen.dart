@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../presentation/blocs/auth_cubit.dart';
 import '../presentation/pages/home_page.dart';
-import '../presentation/widgets/register_dialog.dart';
-// import 'home_screen.dart';
-import '../tasks/create_task_page.dart';
+//import '../presentation/widgets/register_dialog.dart';
+
 
 //import 'package:google_fonts/google_fonts.dart';
 
@@ -133,12 +132,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ),
                                 ),
-                                TextButton(
+                              /*  TextButton(
                                   onPressed: () {
                                     showRegisterDialog(context);
                                   },
                                   child: const Text("¿No tienes cuenta? Crear cuenta"),
-                                ),
+                                ),*/
                               ],
                             ),
                           );
