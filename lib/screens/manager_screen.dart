@@ -318,7 +318,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
                     statusColor = Colors.red;
                   } else if (tasks.isEmpty) {
                     workerStatus = "Sin Tareas";
-                    statusColor = Colors.red;
+                    statusColor = Colors.grey;
                   }
 
                   return Card(
