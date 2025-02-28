@@ -72,7 +72,6 @@ class TaskItem extends StatelessWidget {
     );
   }
 
-  /// 🔥 Método para obtener el color del estado
   Color _getStatusColor(String status) {
     switch (status) {
       case 'pendiente':

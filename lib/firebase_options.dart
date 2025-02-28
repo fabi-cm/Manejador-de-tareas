@@ -24,10 +24,7 @@ class DefaultFirebaseOptions {
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for android - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return android;
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
@@ -50,11 +47,12 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBQ5jkW3tuvLrYFwFrl9GABxQgikmEr-CA',
-    appId: '1:572208784994:ios:f2dca3a9de4009bf08533b',
-    messagingSenderId: '572208784994',
-    projectId: 'prueba2-aa4f5',
-    storageBucket: 'prueba2-aa4f5.firebasestorage.app',
+    apiKey: 'AIzaSyCb3uvI2Fn1Ibj611qm_QdlW6fTMDJhXMQ',
+    appId: '1:674077705783:ios:f665576adc56b1c75661b2',
+    messagingSenderId: '674077705783',
+    projectId: 'db-manejo-de-tareas',
+    storageBucket: 'db-manejo-de-tareas.firebasestorage.app',
+    iosClientId: '674077705783-5ueqp1krbb4liqbt8bha4n7bqhhfl284.apps.googleusercontent.com',
     iosBundleId: 'com.example.taskManager',
   );
 
@@ -65,6 +63,14 @@ class DefaultFirebaseOptions {
     projectId: 'prueba2-aa4f5',
     storageBucket: 'prueba2-aa4f5.firebasestorage.app',
     iosBundleId: 'com.example.taskManager',
+  );
+
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyA0Gb4NBfxqUlET900mZTgoOVHBaEUJawY',
+    appId: '1:674077705783:android:ce805c7bf3ffa5375661b2',
+    messagingSenderId: '674077705783',
+    projectId: 'db-manejo-de-tareas',
+    storageBucket: 'db-manejo-de-tareas.firebasestorage.app',
   );
 
 }
