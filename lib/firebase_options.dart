@@ -67,7 +67,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyA0Gb4NBfxqUlET900mZTgoOVHBaEUJawY',
-    appId: '1:674077705783:android:ce805c7bf3ffa5375661b2',
+    appId: '1:674077705783:android:169b3a5d931469035661b2',
     messagingSenderId: '674077705783',
     projectId: 'db-manejo-de-tareas',
     storageBucket: 'db-manejo-de-tareas.firebasestorage.app',

@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:674077705783:android:ce805c7bf3ffa5375661b2",
+        "mobilesdk_app_id": "1:674077705783:android:169b3a5d931469035661b2",
         "android_client_info": {
-          "package_name": "com.example.task_manager"
+          "package_name": "com.dieselsoft.ds_tasks"
         }
       },
       "oauth_client": [
