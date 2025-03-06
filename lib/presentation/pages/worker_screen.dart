@@ -69,6 +69,7 @@ class WorkerScreen extends StatelessWidget {
             } else if (state is WorkerLoaded) {
               final tasks = state.tasks;
 
+
               // Separar tareas completadas de tareas activas
               final activeTasks = tasks.where((task) => task['status'] != 'completado').toList();
               final completedTasks = tasks.where((task) => task['status'] == 'completado').toList();

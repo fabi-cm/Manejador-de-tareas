@@ -196,73 +196,97 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 
-// Resto del código...
-
-
 
   Widget _buildTaskList(String userId, String role) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('tasks')
-          .where(role == 'trabajador' ? 'assignedTo' : 'createdBy', isEqualTo: userId)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+      stream: FirebaseFirestore.instance.collection('tasks').snapshots(),
+      builder: (context, tasksSnapshot) {
+        if (tasksSnapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (snapshot.hasError) {
-          return Center(child: Text("Error: ${snapshot.error}"));
+        if (tasksSnapshot.hasError) {
+          return Center(child: Text("Error: ${tasksSnapshot.error}"));
         }
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        if (!tasksSnapshot.hasData || tasksSnapshot.data!.docs.isEmpty) {
           return const Padding(
             padding: EdgeInsets.all(8.0),
             child: Text('No hay tareas asignadas.'),
           );
         }
 
-        final tasks = snapshot.data!.docs.map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          final createdBy = data['createdBy'];
-          final assignedTo = data['assignedTo'];
+        // Obtener todas las tareas
+        final tasks = tasksSnapshot.data!.docs;
 
-          // Obtener el nombre del creador y del asignado
-          return FutureBuilder<DocumentSnapshot>(
-            future: FirebaseFirestore.instance
-                .collection('users')
-                .doc(createdBy)
-                .get(),
-            builder: (context, createdBySnapshot) {
-              if (createdBySnapshot.connectionState == ConnectionState.waiting) {
-                return ListTile(
-                  title: Text("Cargando..."),
-                );
-              }
-              if (createdBySnapshot.hasError || !createdBySnapshot.hasData || !createdBySnapshot.data!.exists) {
-                return ListTile(
-                  title: Text("Error al cargar datos del creador"),
-                );
-              }
+        // Filtrar las tareas según el rol del usuario
+        final filteredTasks = tasks.where((task) {
+          final data = task.data() as Map<String, dynamic>;
+          if (role == 'trabajador') {
+            return data['assignedTo'] == userId;
+          } else if (role == 'encargado') {
+            return data['createdBy'] == userId;
+          }
+          return false;
+        }).toList();
 
-              final createdByName = createdBySnapshot.data!.get('username') ?? 'Desconocido';
+        if (filteredTasks.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text('No hay tareas asignadas.'),
+          );
+        }
 
-              return FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(assignedTo)
-                    .get(),
-                builder: (context, assignedToSnapshot) {
-                  if (assignedToSnapshot.connectionState == ConnectionState.waiting) {
-                    return ListTile(
-                      title: Text("Cargando..."),
-                    );
-                  }
-                  /*if (assignedToSnapshot.hasError || !assignedToSnapshot.hasData || !assignedToSnapshot.data!.exists) {
-                    return ListTile(
-                      title: Text("Error al cargar datos del asignado"),
-                    );
-                  }*/
+        // Contar tareas completadas (solo para trabajadores)
+        int completedTasksCount = 0;
+        if (role == 'trabajador') {
+          completedTasksCount = filteredTasks.where((task) {
+            final data = task.data() as Map<String, dynamic>;
+            return data['status'] == 'completado';
+          }).length;
+        }
 
-                  final assignedToName = assignedToSnapshot.data!.get('username') ?? 'Desconocido';
+        // Obtener todos los usuarios de una sola vez
+        return StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection('users').snapshots(),
+          builder: (context, usersSnapshot) {
+            if (usersSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (usersSnapshot.hasError) {
+              return Center(child: Text("Error: ${usersSnapshot.error}"));
+            }
+            if (!usersSnapshot.hasData || usersSnapshot.data!.docs.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text('No hay usuarios disponibles.'),
+              );
+            }
+
+            // Crear un mapa de usuarios para acceder rápidamente a sus nombres
+            final usersMap = <String, String>{};
+            for (final userDoc in usersSnapshot.data!.docs) {
+              final userData = userDoc.data() as Map<String, dynamic>;
+              usersMap[userDoc.id] = userData['username'] ?? 'Desconocido';
+            }
+
+            // Construir la lista de tareas
+            return Column(
+              children: [
+                if (role == 'trabajador')
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      'Tareas completadas: $completedTasksCount',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ),
+                ...filteredTasks.map((task) {
+                  final data = task.data() as Map<String, dynamic>;
+                  final createdBy = data['createdBy'];
+                  final assignedTo = data['assignedTo'];
 
                   return ListTile(
                     title: Text(data['title'] ?? 'Sin título'),
@@ -276,25 +300,20 @@ class _AdminScreenState extends State<AdminScreen> {
                           style: TextStyle(color: _getStatusColor(data['status'])),
                         ),
                         if (role == 'trabajador')
-                          Text("Asignado por: $createdByName"),
+                          Text("Asignado por: ${usersMap[createdBy] ?? 'Desconocido'}"),
                         if (role == 'encargado')
-                          Text("Asignado a: $assignedToName"),
+                          Text("Asignado a: ${usersMap[assignedTo] ?? 'Desconocido'}"),
                       ],
                     ),
                   );
-                },
-              );
-            },
-          );
-        }).toList();
-
-        return Column(
-          children: tasks,
+                }).toList(),
+              ],
+            );
+          },
         );
       },
     );
   }
-
 
   void _showRoleDialog(BuildContext context, String userId) {
     final adminCubit = context.read<AdminCubit>();

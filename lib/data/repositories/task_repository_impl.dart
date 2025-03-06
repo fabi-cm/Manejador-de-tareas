@@ -14,7 +14,7 @@ class TaskRepositoryImpl implements TaskRepository {
       'status': task.status,
       'priority': task.priority,
       'createdBy': task.createdBy,
-      'timestamp': task.timestamp.millisecondsSinceEpoch,
+      'timestamp': Timestamp.fromMillisecondsSinceEpoch(task.timestamp.millisecondsSinceEpoch),
     });
   }
 
@@ -72,7 +72,7 @@ class TaskRepositoryImpl implements TaskRepository {
           status: data['status'],
           priority: data['priority'],
           createdBy: data['createdBy'],
-          timestamp: DateTime.fromMillisecondsSinceEpoch(data['timestamp']),
+          timestamp: (data['timestamp'] as Timestamp).toDate(),
         );
       }).toList();
     });
@@ -80,12 +80,17 @@ class TaskRepositoryImpl implements TaskRepository {
 
   // Obtener tareas asignadas a un trabajador en tiempo real
   Stream<QuerySnapshot> getTasksAssignedTo(String userId) {
+    final DateTime thirtyDaysAgo = DateTime.now().subtract(Duration(days: 30));
+
     return _firestore
         .collection('tasks')
         .where('assignedTo', isEqualTo: userId)
-        .orderBy('priority') // Ordenar por estado
+        .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(thirtyDaysAgo)) // Filtrar últimos 30 días
+        .orderBy('timestamp', descending: true) // Ordenar por fecha más reciente primero
+        .orderBy('priority', descending: true) // Luego ordenar por prioridad
         .snapshots();
   }
+
 
   // Actualizar el estado de una tarea
   Future<void> updateTaskStatus(String taskId, String newStatus) async {
