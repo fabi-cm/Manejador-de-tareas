@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import '../../data/repositories/user_repository.dart';
 import '../blocs/admin_cubit.dart';
 import '../blocs/auth_cubit.dart';
 import '../widgets/register_dialog.dart';
 import '../widgets/role_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -50,6 +52,22 @@ class RoleUtils {
 
 class _AdminScreenState extends State<AdminScreen> {
   Map<String, bool> expandedUsers = {};
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = ""; // Almacena el término de búsqueda
+
+  @override
+  void initState() {
+    super.initState();
+    initializeDateFormatting('es', null).then((_) {
+      // Una vez inicializado, puedes usar DateFormat
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -116,6 +134,24 @@ class _AdminScreenState extends State<AdminScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
+              // Campo de búsqueda
+              TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  labelText: 'Buscar usuario',
+                  hintText: 'Ingresa un nombre de usuario',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value; // Actualiza el término de búsqueda
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
               const SizedBox(height: 10),
               Expanded(
                 child: BlocBuilder<AdminCubit, AdminState>(
@@ -123,10 +159,16 @@ class _AdminScreenState extends State<AdminScreen> {
                     if (state is AdminLoading) {
                       return const Center(child: CircularProgressIndicator());
                     } else if (state is AdminLoaded) {
+                      // Filtrar usuarios según el término de búsqueda
+                      final filteredUsers = state.users.where((user) {
+                        final username = user['username']?.toString().toLowerCase() ?? '';
+                        return username.contains(_searchQuery.toLowerCase());
+                      }).toList();
+
                       return ListView.builder(
-                        itemCount: state.users.length,
+                        itemCount: filteredUsers.length,
                         itemBuilder: (context, index) {
-                          final user = state.users[index];
+                          final user = filteredUsers[index];
                           final userId = user['uid'];
                           final role = user['role'] ?? 'Sin rol';
                           final isExpanded = expandedUsers[userId] ?? false;
@@ -135,7 +177,7 @@ class _AdminScreenState extends State<AdminScreen> {
                             margin: EdgeInsets.only(bottom: 16),
                             child: ExpansionTile(
                               leading: CircleAvatar(
-                                backgroundColor: RoleUtils.getRoleColor(role).withOpacity(0.2),
+                                backgroundColor: RoleUtils.getRoleColor(role).withOpacity(0.5),
                                 child: Icon(Icons.person, color: RoleUtils.getRoleColor(role)),
                               ),
                               title: Text(
@@ -197,6 +239,8 @@ class _AdminScreenState extends State<AdminScreen> {
   }
 
 
+
+
   Widget _buildTaskList(String userId, String role) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('tasks').snapshots(),
@@ -214,8 +258,19 @@ class _AdminScreenState extends State<AdminScreen> {
           );
         }
 
-        // Obtener todas las tareas
-        final tasks = tasksSnapshot.data!.docs;
+        // Obtener la fecha actual y la fecha de hace 30 días
+        final now = DateTime.now();
+        final thirtyDaysAgo = now.subtract(Duration(days: 30));
+
+        // Obtener todas las tareas y filtrar las de los últimos 30 días
+        final tasks = tasksSnapshot.data!.docs.where((task) {
+          final data = task.data() as Map<String, dynamic>;
+          final timestamp = data['timestamp'] as Timestamp?;
+          if (timestamp == null) return false; // Ignorar tareas sin timestamp
+
+          final taskDate = timestamp.toDate();
+          return taskDate.isAfter(thirtyDaysAgo); // Filtrar tareas de los últimos 30 días
+        }).toList();
 
         // Filtrar las tareas según el rol del usuario
         final filteredTasks = tasks.where((task) {
@@ -231,11 +286,11 @@ class _AdminScreenState extends State<AdminScreen> {
         if (filteredTasks.isEmpty) {
           return const Padding(
             padding: EdgeInsets.all(8.0),
-            child: Text('No hay tareas asignadas.'),
+            child: Text('No hay tareas asignadas en los últimos 30 días.'),
           );
         }
 
-        // Contar tareas completadas (solo para trabajadores)
+        // Contar tareas completadas en los últimos 30 días (solo para trabajadores)
         int completedTasksCount = 0;
         if (role == 'trabajador') {
           completedTasksCount = filteredTasks.where((task) {
@@ -287,23 +342,34 @@ class _AdminScreenState extends State<AdminScreen> {
                   final data = task.data() as Map<String, dynamic>;
                   final createdBy = data['createdBy'];
                   final assignedTo = data['assignedTo'];
+                  final timestamp = data['timestamp'] as Timestamp?;
+                  final taskDate = timestamp?.toDate();
 
-                  return ListTile(
-                    title: Text(data['title'] ?? 'Sin título'),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(data['description'] ?? 'Sin descripción'),
-                        SizedBox(height: 4),
-                        Text(
-                          "Estado: ${data['status']}",
-                          style: TextStyle(color: _getStatusColor(data['status'])),
-                        ),
-                        if (role == 'trabajador')
-                          Text("Asignado por: ${usersMap[createdBy] ?? 'Desconocido'}"),
-                        if (role == 'encargado')
-                          Text("Asignado a: ${usersMap[assignedTo] ?? 'Desconocido'}"),
-                      ],
+                  return Card(
+                    elevation: 3, // Intensidad del sombreado
+                    margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8), // Margen entre las tarjetas
+                    child: ListTile(
+                      title: Text(data['title'] ?? 'Sin título'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(data['description'] ?? 'Sin descripción'),
+                          SizedBox(height: 4),
+                          Text(
+                            "Estado: ${data['status']}",
+                            style: TextStyle(color: _getStatusColor(data['status'])),
+                          ),
+                          if (role == 'trabajador')
+                            Text("Asignado por: ${usersMap[createdBy] ?? 'Desconocido'}"),
+                          if (role == 'encargado')
+                            Text("Asignado a: ${usersMap[assignedTo] ?? 'Desconocido'}"),
+                          if (taskDate != null)
+                            Text(
+                              "Fecha: ${DateFormat('EEEE d \'de\' MMMM', 'es').format(taskDate.toLocal())}",
+                              style: TextStyle(color: _getStatusColor(data['status'])),
+                            ),
+                        ],
+                      ),
                     ),
                   );
                 }).toList(),
@@ -314,6 +380,7 @@ class _AdminScreenState extends State<AdminScreen> {
       },
     );
   }
+
 
   void _showRoleDialog(BuildContext context, String userId) {
     final adminCubit = context.read<AdminCubit>();
@@ -350,7 +417,7 @@ class _AdminScreenState extends State<AdminScreen> {
   Color _getStatusColor(String status) {
     switch (status) {
       case "pendiente":
-        return Colors.orange;
+        return Colors.red;
       case "en progreso":
         return Colors.blue;
       case "completado":
